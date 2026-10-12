@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Números Locos – Practica multiplicar y dividir</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EFE9FF; --dot:#D5C8FF; --card:#FFFFFF; --soft:#F7F3FF;
+  --ink:#2A1F5C; --muted:#5B5090; --line:#2A1F5C; --focus:#7B4FE0;
+  --coral:#FF5D73; --sun:#FFC93C; --mint:#26C9A8; --sky:#38A8FF; --lilac:#BFA8FF;
+  --ok:#14915F; --bad:#D6303A; --okbg:#D7F8E8; --badbg:#FFE1E4; --band:#FFF0BF;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1A1240; --dot:#2B2163; --card:#2E2570; --soft:#261D5E;
+    --ink:#F6F1FF; --muted:#C4B8F5; --line:#0C0727; --focus:#FFC93C;
+    --ok:#5BE3A8; --bad:#FF8A93; --okbg:#134A3B; --badbg:#5A2142; --band:#3B3088;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1A1240; --dot:#2B2163; --card:#2E2570; --soft:#261D5E;
+  --ink:#F6F1FF; --muted:#C4B8F5; --line:#0C0727; --focus:#FFC93C;
+  --ok:#5BE3A8; --bad:#FF8A93; --okbg:#134A3B; --badbg:#5A2142; --band:#3B3088;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{
+  margin:0; background-color:var(--bg);
+  background-image:radial-gradient(var(--dot) 2px, transparent 2.5px);
+  background-size:24px 24px;
+  color:var(--ink);
+  font-family:'Fredoka','Trebuchet MS','Segoe UI',system-ui,sans-serif;
+  font-size:18px; line-height:1.45;
+}
+:focus-visible{outline:4px solid var(--focus); outline-offset:3px}
+[hidden]{display:none !important}
+
+/* ---------- Encabezado ---------- */
+.hero{position:relative; text-align:center; padding:30px 16px 14px; overflow:hidden}
+.deco{position:absolute; inset:0; pointer-events:none; z-index:0}
+.deco span{position:absolute; font-weight:700; font-size:clamp(46px,9vw,92px); color:var(--dot); opacity:.9}
+.deco span:nth-child(1){left:4%; top:10%; transform:rotate(-12deg)}
+.deco span:nth-child(2){right:5%; top:6%; transform:rotate(10deg)}
+.deco span:nth-child(3){left:14%; bottom:0; transform:rotate(8deg)}
+.deco span:nth-child(4){right:15%; bottom:-4%; transform:rotate(-8deg)}
+.hero h1{position:relative; z-index:1; margin:0 0 10px; display:flex; flex-wrap:wrap; justify-content:center; gap:10px 28px}
+.word{display:flex; gap:7px}
+.blk{
+  display:inline-grid; place-items:center;
+  width:clamp(34px,8vw,60px); height:clamp(44px,10vw,74px);
+  border:3px solid var(--line); border-radius:14px; box-shadow:0 5px 0 var(--line);
+  font-weight:700; font-size:clamp(24px,6vw,42px); color:#2A1F5C;
+}
+.blk:nth-child(odd){transform:rotate(-4deg)}
+.blk:nth-child(even){transform:rotate(3deg)}
+.blk.coral{background:var(--coral)} .blk.sun{background:var(--sun)} .blk.mint{background:var(--mint)}
+.blk.sky{background:var(--sky)} .blk.lilac{background:var(--lilac)}
+.sub{position:relative; z-index:1; margin:0 auto; max-width:34em; color:var(--muted); font-weight:500}
+
+/* ---------- Estructura ---------- */
+.wrap{max-width:1120px; margin:0 auto; padding:14px 16px 44px}
+.panel{
+  background:var(--card); border:3px solid var(--line); border-radius:24px;
+  box-shadow:0 7px 0 var(--line); padding:18px 20px; margin-bottom:26px;
+}
+.panel h2{margin:0 0 4px; font-size:1.45rem}
+.panel .lead{margin:0 0 14px; color:var(--muted); font-size:.98rem}
+.settings-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px 22px}
+.group h3{margin:0 0 8px; font-size:1.02rem}
+.group .note{display:block; font-weight:400; font-size:.85rem; color:var(--muted)}
+.group.off{opacity:.45}
+.opts{display:flex; flex-wrap:wrap; gap:9px}
+.opt{
+  font:inherit; font-weight:600; padding:8px 16px; border-radius:999px;
+  border:3px solid var(--line); background:var(--soft); color:var(--ink);
+  box-shadow:0 3px 0 var(--line); cursor:pointer;
+}
+.opt[aria-pressed="true"]{background:var(--sun); color:#2A1F5C}
+.opt:active:not(:disabled){transform:translateY(3px); box-shadow:0 0 0 var(--line)}
+.opt:disabled{cursor:not-allowed}
+
+.layout{display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:26px; align-items:start}
+@media (max-width:979px){.layout{grid-template-columns:1fr}}
+
+/* ---------- Hoja de ejercicios ---------- */
+.sheet-head{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px}
+.sheet-head h2{margin:0}
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.chip{border:3px solid var(--line); border-radius:999px; padding:1px 12px; font-weight:600; font-size:.92rem; background:var(--soft)}
+.bar{height:18px; border:3px solid var(--line); border-radius:999px; background:var(--soft); overflow:hidden; margin-bottom:18px}
+.fill{height:100%; width:0; background:linear-gradient(90deg,var(--coral),var(--sun),var(--mint),var(--sky)); transition:width .35s ease}
+.list{list-style:none; margin:0; padding:0}
+.ex{
+  display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px;
+  padding:12px 14px; margin-bottom:14px; background:var(--soft);
+  border:3px solid var(--line); border-radius:18px;
+}
+.ex.ok{background:var(--okbg)}
+.ex.bad{background:var(--badbg)}
+.n{
+  flex:none; width:38px; height:38px; display:grid; place-items:center;
+  border:3px solid var(--line); border-radius:50%; font-weight:700; color:#2A1F5C;
+}
+.n.coral{background:var(--coral)} .n.sun{background:var(--sun)} .n.mint{background:var(--mint)}
+.n.sky{background:var(--sky)} .n.lilac{background:var(--lilac)}
+.expr{display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:1.7rem; font-weight:700}
+.tile{
+  min-width:54px; padding:0 12px; text-align:center; color:#2A1F5C;
+  border:3px solid var(--line); border-radius:12px; box-shadow:0 3px 0 var(--line);
+}
+.tile.coral{background:var(--coral)} .tile.sun{background:var(--sun)} .tile.mint{background:var(--mint)}
+.tile.sky{background:var(--sky)} .tile.lilac{background:var(--lilac)}
+.ans{
+  width:112px; font:inherit; font-size:1.7rem; font-weight:700; text-align:center;
+  padding:2px 8px; border:3px solid var(--line); border-radius:12px;
+  background:var(--card); color:var(--ink);
+}
+.ex.ok .ans{border-color:var(--ok)}
+.ex.bad .ans{border-color:var(--bad)}
+.meta{display:flex; align-items:center; gap:10px; margin-left:auto; flex-wrap:wrap}
+.badge{font-weight:600; font-size:.95rem}
+.ex.ok .badge{color:var(--ok)} .ex.bad .badge{color:var(--bad)}
+.mini{
+  font:inherit; font-size:.9rem; font-weight:600; padding:3px 13px; border-radius:999px;
+  border:3px solid var(--line); background:var(--sun); color:#2A1F5C; cursor:pointer;
+}
+.hint{
+  flex-basis:100%; background:var(--card); border:3px dashed var(--line);
+  border-radius:14px; padding:10px 14px; font-size:.98rem;
+}
+.hint b{color:var(--focus)}
+.actions{display:flex; flex-wrap:wrap; gap:12px; margin-top:20px}
+.btn{
+  font:inherit; font-weight:700; font-size:1.05rem; padding:12px 20px; border-radius:16px;
+  border:3px solid var(--line); box-shadow:0 5px 0 var(--line); cursor:pointer; color:#2A1F5C;
+}
+.btn.sky{background:var(--sky)} .btn.mint{background:var(--mint)} .btn.sun{background:var(--sun)}
+.btn.coral{background:var(--coral)} .btn.lilac{background:var(--lilac)}
+.btn:active:not(:disabled){transform:translateY(4px); box-shadow:0 1px 0 var(--line)}
+.btn:disabled{opacity:.45; cursor:not-allowed}
+.notice{
+  margin-top:16px; padding:14px 16px; background:var(--card);
+  border:3px solid var(--line); border-radius:16px;
+}
+.notice p{margin:0 0 10px; font-weight:600}
+.notice .row{display:flex; flex-wrap:wrap; gap:10px}
+.live{min-height:1.5em; margin:12px 0 0; font-weight:600; color:var(--muted)}
+
+/* ---------- Ayuda ---------- */
+.help{position:sticky; top:calc(14px + env(safe-area-inset-top,0px))}
+@media (max-width:979px){.help{position:static}}
+.help h2{font-size:1.3rem; margin:0 0 12px}
+details{border:3px solid var(--line); border-radius:16px; background:var(--soft); margin-bottom:10px}
+summary{cursor:pointer; padding:10px 14px; font-weight:700; list-style:none}
+summary::-webkit-details-marker{display:none}
+details[open] summary{border-bottom:3px solid var(--line)}
+.dbody{padding:10px 14px 12px; font-size:.97rem}
+.dbody ol,.dbody ul{margin:0; padding-left:1.2em}
+.dbody li{margin-bottom:6px}
+.ex-demo{display:inline-block; background:var(--card); border:2px solid var(--line); border-radius:10px; padding:0 8px; font-weight:600}
+.tabs{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px}
+.tabs .opt{padding:2px 10px; font-size:.9rem; box-shadow:0 2px 0 var(--line)}
+#tableOut{margin:0; padding:8px 12px; background:var(--card); border:2px solid var(--line); border-radius:10px; columns:2; font-weight:600; list-style:none}
+
+/* ---------- Resultados y envío ---------- */
+.result-top{display:flex; flex-wrap:wrap; align-items:center; gap:14px 28px; margin-bottom:14px}
+.score{font-size:clamp(2.6rem,9vw,4rem); font-weight:700; line-height:1}
+.score small{font-size:1.1rem; font-weight:500; color:var(--muted)}
+.stars{font-size:2.6rem; letter-spacing:4px; line-height:1}
+.stars .on{color:var(--sun); -webkit-text-stroke:2px var(--line)}
+.stars .off{color:var(--dot); -webkit-text-stroke:2px var(--line)}
+.msg{font-size:1.15rem; font-weight:600; margin:0 0 14px}
+.missed{margin:0 0 6px; padding-left:1.2em}
+.missed li{margin-bottom:4px; font-weight:500}
+.send{margin-top:22px; padding-top:20px; border-top:3px dashed var(--line)}
+.send h3{margin:0 0 4px; font-size:1.3rem}
+.form-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px 20px; margin:14px 0}
+.field label{display:block; font-weight:600; margin-bottom:4px; font-size:.95rem}
+.field input[type=text],.field input[type=email]{
+  width:100%; font:inherit; padding:8px 12px; border:3px solid var(--line);
+  border-radius:12px; background:var(--card); color:var(--ink);
+}
+.approve{
+  display:flex; align-items:center; gap:14px; padding:14px 16px; cursor:pointer;
+  background:var(--soft); border:3px solid var(--line); border-radius:18px; font-weight:700; font-size:1.1rem;
+}
+.approve.on{background:var(--okbg)}
+.approve input{width:30px; height:30px; accent-color:#14915F; flex:none}
+.approve small{display:block; font-weight:400; font-size:.88rem; color:var(--muted)}
+.report{
+  width:100%; min-height:220px; margin-top:14px; padding:12px; font-family:ui-monospace,Menlo,Consolas,monospace;
+  font-size:.88rem; line-height:1.5; border:3px solid var(--line); border-radius:14px;
+  background:var(--card); color:var(--ink); resize:vertical;
+}
+.sendmsg{min-height:1.5em; margin:10px 0 0; font-weight:600}
+.foot{text-align:center; color:var(--muted); font-size:.9rem; margin-top:8px}
+#confetti{position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:50}
+/* ---------- Pestañas principales ---------- */
+.maintabs{display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin:0 0 24px}
+.tabbtn{
+  font:inherit; font-weight:700; font-size:1.1rem; padding:12px 22px; border-radius:18px;
+  border:3px solid var(--line); background:var(--card); color:var(--ink);
+  box-shadow:0 5px 0 var(--line); cursor:pointer;
+}
+.tabbtn[aria-pressed="true"]{background:var(--sun); color:#2A1F5C}
+.tabbtn:active{transform:translateY(4px); box-shadow:0 1px 0 var(--line)}
+
+/* ---------- Multiplicación en columnas ---------- */
+.prompt{
+  display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin-bottom:14px;
+  padding:10px 14px; background:var(--soft); border:3px solid var(--line); border-radius:16px; font-weight:500;
+}
+.calc{
+  font-size:1.6rem; font-weight:700; padding:0 12px; color:#2A1F5C;
+  background:var(--sun); border:3px solid var(--line); border-radius:12px;
+}
+.board-wrap{overflow-x:auto; padding:8px 2px 16px}
+.board{
+  --cell:clamp(36px, calc((100vw - 120px) / var(--cols,5)), 78px); --sign:clamp(34px,8vw,52px);
+  position:relative; display:grid; width:max-content; max-width:none; margin:0 auto;
+  row-gap:6px; font-weight:700;
+}
+.band{z-index:0; margin:-4px -2px; border-radius:16px; background:transparent}
+.band.on{background:var(--band); outline:3px dashed var(--line)}
+.plabel{z-index:1; text-align:center}
+.plabel span{
+  display:inline-block; min-width:2.2em; padding:0 8px; border:2px solid var(--line);
+  border-radius:999px; font-size:.8rem; color:#2A1F5C;
+}
+.pc0{background:var(--coral)} .pc1{background:var(--sun)} .pc2{background:var(--mint)}
+.pc3{background:var(--sky)} .pc4{background:var(--lilac)}
+.vd{
+  z-index:1; display:grid; place-items:center; height:var(--cell); width:88%; margin:auto;
+  font-size:calc(var(--cell)*.52); color:#2A1F5C;
+  border:3px solid var(--line); border-radius:14px; box-shadow:0 4px 0 var(--line);
+}
+.vd.vm{background:var(--card); color:var(--ink)}
+.vsign{z-index:1; display:grid; place-items:center; font-size:calc(var(--cell)*.5); color:var(--ink)}
+.vline{z-index:1; height:7px; margin:6px 0; border-radius:4px; background:var(--line)}
+.vin{
+  z-index:1; display:block; margin:auto; text-align:center; font:inherit; font-weight:700;
+  color:var(--ink); background:var(--card); border:3px solid var(--line); border-radius:14px;
+}
+.vin.res{width:92%; height:var(--cell); font-size:calc(var(--cell)*.52)}
+.vin.car{
+  width:62%; height:calc(var(--cell)*.58); font-size:calc(var(--cell)*.32);
+  border-style:dashed; border-color:var(--coral); background:var(--soft);
+}
+.vin.now{border-style:solid; border-color:var(--line); box-shadow:0 0 0 5px var(--sun)}
+.vin.dim{opacity:.55}
+.vin.ok{background:var(--okbg); border-color:var(--ok); border-style:solid}
+.vin.bad{background:var(--badbg); border-color:var(--bad); border-style:solid}
+.vh{margin-top:6px}
+.vd.ph{background:var(--soft); color:var(--muted); border-style:dashed; box-shadow:none; opacity:.8}
+.vin.fin{border-width:4px}
+.rowchip{
+  z-index:1; display:grid; place-items:center; width:92%; height:calc(var(--cell)*.62); margin:auto;
+  font-size:calc(var(--cell)*.3); font-weight:700; color:#2A1F5C;
+  border:2px solid var(--line); border-radius:10px;
+}
+.names{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px}
+.names span{border:3px solid var(--line); border-radius:12px; padding:0 10px; background:var(--card); font-size:.92rem}
+.names b{color:var(--focus)}
+.done{text-align:center}
+.done .stars{margin-bottom:6px}
+.legend{display:flex; flex-wrap:wrap; gap:6px 8px}
+.legend span{border:2px solid var(--line); border-radius:999px; padding:0 10px; font-size:.85rem; font-weight:600; color:#2A1F5C}
+@media (max-width:560px){
+  .board-wrap{margin:0 -6px}
+}
+
+@media (max-width:560px){
+  body{font-size:17px}
+  .meta{margin-left:0; width:100%}
+  .expr{font-size:1.45rem}
+  #tableOut{columns:1}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{transition:none !important; scroll-behavior:auto !important}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="deco" aria-hidden="true"><span>×</span><span>÷</span><span>=</span><span>×</span></div>
+  <h1 id="title" aria-label="Números Locos"></h1>
+  <p class="sub">Practica multiplicaciones y divisiones, gana estrellas y envía tus resultados a tu maestro o maestra.</p>
+</header>
+
+<main class="wrap">
+
+  <nav class="maintabs" aria-label="Secciones">
+    <button class="tabbtn" id="tabQuickBtn" aria-pressed="true">⚡ Ejercicios rápidos</button>
+    <button class="tabbtn" id="tabVertBtn" aria-pressed="false">🧮 Multiplicación en columnas</button>
+  </nav>
+
+  <div id="tabQuick">
+  <!-- Configuración -->
+  <section class="panel" aria-labelledby="cfgTitle">
+    <h2 id="cfgTitle">Elige tu reto</h2>
+    <p class="lead">Cuando cambies una opción, aparecen ejercicios nuevos al instante.</p>
+    <div class="settings-grid">
+      <div class="group" data-key="op">
+        <h3>¿Qué quieres practicar?</h3>
+        <div class="opts">
+          <button class="opt" data-val="mul" aria-pressed="true">✖️ Multiplicar</button>
+          <button class="opt" data-val="div" aria-pressed="false">➗ Dividir</button>
+          <button class="opt" data-val="mix" aria-pressed="false">🎲 Mezcla</button>
+        </div>
+      </div>
+      <div class="group" data-key="factors" id="factorsGroup">
+        <h3>¿Cuántos números en la multiplicación? <span class="note" id="factorsNote">Con 3 o 4 números usamos números más pequeños.</span></h3>
+        <div class="opts">
+          <button class="opt" data-val="2" aria-pressed="true">2 números</button>
+          <button class="opt" data-val="3" aria-pressed="false">3 números</button>
+          <button class="opt" data-val="4" aria-pressed="false">4 números</button>
+        </div>
+      </div>
+      <div class="group" data-key="max">
+        <h3>¿Hasta qué número?</h3>
+        <div class="opts">
+          <button class="opt" data-val="5" aria-pressed="false">Hasta 5</button>
+          <button class="opt" data-val="10" aria-pressed="true">Hasta 10</button>
+          <button class="opt" data-val="12" aria-pressed="false">Hasta 12</button>
+        </div>
+      </div>
+      <div class="group" data-key="count">
+        <h3>¿Cuántos ejercicios?</h3>
+        <div class="opts">
+          <button class="opt" data-val="5" aria-pressed="false">5</button>
+          <button class="opt" data-val="10" aria-pressed="true">10</button>
+          <button class="opt" data-val="15" aria-pressed="false">15</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="layout">
+    <!-- Ejercicios -->
+    <section class="panel" aria-labelledby="sheetTitle" style="margin-bottom:0">
+      <div class="sheet-head">
+        <h2 id="sheetTitle">Tus ejercicios</h2>
+        <div class="chips" id="chips"></div>
+      </div>
+      <div class="bar" aria-hidden="true"><div class="fill" id="fill"></div></div>
+      <ol class="list" id="list"></ol>
+      <div class="actions">
+        <button class="btn sky" id="checkAll">🔍 Revisar mis respuestas</button>
+        <button class="btn mint" id="finish">🏁 ¡Ya terminé!</button>
+        <button class="btn sun" id="newSet">🎲 Ejercicios nuevos</button>
+      </div>
+      <div class="notice" id="confirm" hidden>
+        <p id="confirmText"></p>
+        <div class="row">
+          <button class="btn lilac" id="keepGoing">✏️ Seguir respondiendo</button>
+          <button class="btn mint" id="yesFinish">🏁 Sí, ya terminé</button>
+        </div>
+      </div>
+      <p class="live" id="live" role="status" aria-live="polite"></p>
+    </section>
+
+    <!-- Ayuda -->
+    <aside class="panel help" aria-labelledby="helpTitle" style="margin-bottom:0">
+      <h2 id="helpTitle">🧭 ¿Cómo lo hago?</h2>
+
+      <details open>
+        <summary>📝 Cómo usar esta página</summary>
+        <div class="dbody">
+          <ol>
+            <li>Elige qué quieres practicar y cuántos números.</li>
+            <li>Escribe tu respuesta en cada casilla y presiona Enter.</li>
+            <li>Si te equivocas, toca <b>💡 Ayuda</b> y vuelve a intentar.</li>
+            <li>Cuando acabes, toca <b>¡Ya terminé!</b>.</li>
+            <li>Un adulto marca <b>Aprobado</b> y envías tus resultados.</li>
+          </ol>
+        </div>
+      </details>
+
+      <details>
+        <summary>✖️ Cómo multiplicar</summary>
+        <div class="dbody">
+          <ul>
+            <li>Multiplicar es sumar el mismo número varias veces: <span class="ex-demo">4 × 3 = 4 + 4 + 4 = 12</span></li>
+            <li>El orden no cambia el resultado: 4 × 3 es igual a 3 × 4.</li>
+            <li>Con 3 o 4 números, ve de dos en dos: <span class="ex-demo">2 × 3 × 4</span> primero 2 × 3 = 6, después 6 × 4 = 24.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary>➗ Cómo dividir</summary>
+        <div class="dbody">
+          <ul>
+            <li>Dividir es repartir en partes iguales. En <span class="ex-demo">12 ÷ 3</span> repartes 12 caramelos entre 3 amigos: ¡le tocan 4 a cada uno!</li>
+            <li>Piensa en la tabla: ¿3 × ? = 12.</li>
+            <li>Comprueba: tu respuesta × el número que divide debe dar el primer número. 4 × 3 = 12 ✔</li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary>📚 Cómo se llaman las partes</summary>
+        <div class="dbody">
+          <ul>
+            <li><b>Multiplicación:</b> multiplicando × multiplicador = producto. Los dos números que se multiplican son los factores.</li>
+            <li><b>División:</b> dividendo ÷ divisor = cociente. Si sobra algo, se llama residuo.</li>
+            <li>Numerador y denominador son las partes de una fracción (como 3/4).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary>⭐ Trucos rápidos</summary>
+        <div class="dbody">
+          <ul>
+            <li>× 2: es el doble del número.</li>
+            <li>× 5: el resultado siempre termina en 0 o en 5.</li>
+            <li>× 10: agrega un cero al final.</li>
+            <li>× 9: las cifras del resultado suman 9. En 9 × 4 = 36, 3 + 6 = 9.</li>
+            <li>Multiplicar y dividir son pareja: si 6 × 7 = 42, entonces 42 ÷ 7 = 6.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary>📋 Mi tabla de multiplicar</summary>
+        <div class="dbody">
+          <div class="tabs" id="tableTabs" role="group" aria-label="Elige la tabla"></div>
+          <ul id="tableOut"></ul>
+        </div>
+      </details>
+    </aside>
+  </div>
+
+  </div><!-- /tabQuick -->
+
+  <!-- Multiplicación en columnas -->
+  <div id="tabVert" hidden>
+    <section class="panel" aria-labelledby="vCfgTitle">
+      <h2 id="vCfgTitle">Elige tu reto de columnas</h2>
+      <p class="lead">Multiplica como en el cuaderno: empieza por la derecha y no olvides lo que llevas.</p>
+      <div class="settings-grid">
+        <div class="group" data-vkey="n">
+          <h3>¿Cuántas cifras tiene el multiplicando? <span class="note">Es el número de arriba.</span></h3>
+          <div class="opts">
+            <button class="opt" data-val="2" aria-pressed="false">2 cifras</button>
+            <button class="opt" data-val="3" aria-pressed="true">3 cifras</button>
+            <button class="opt" data-val="4" aria-pressed="false">4 cifras</button>
+          </div>
+        </div>
+        <div class="group" data-vkey="q">
+          <h3>¿Cuántas cifras tiene el multiplicador? <span class="note">Es el número de abajo.</span></h3>
+          <div class="opts">
+            <button class="opt" data-val="1" aria-pressed="true">1 cifra</button>
+            <button class="opt" data-val="2" aria-pressed="false">2 cifras</button>
+            <button class="opt" data-val="3" aria-pressed="false">3 cifras</button>
+          </div>
+        </div>
+        <div class="group" data-vkey="maxM">
+          <h3>¿Qué cifras usa el multiplicador? <span class="note">Cada cifra va del 2 hasta el número que elijas.</span></h3>
+          <div class="opts">
+            <button class="opt" data-val="5" aria-pressed="false">Del 2 al 5</button>
+            <button class="opt" data-val="9" aria-pressed="true">Del 2 al 9</button>
+          </div>
+        </div>
+        <div class="group" data-vkey="carries">
+          <h3>¿Con llevadas? <span class="note">“Sin llevar” usa números pequeños para empezar.</span></h3>
+          <div class="opts">
+            <button class="opt" data-val="0" aria-pressed="false">Sin llevar</button>
+            <button class="opt" data-val="1" aria-pressed="true">Con llevadas</button>
+          </div>
+        </div>
+        <div class="group" data-vkey="mode">
+          <h3>¿Cómo quieres hacerlo? <span class="note">Paso a paso te guía casilla por casilla.</span></h3>
+          <div class="opts">
+            <button class="opt" data-val="guided" aria-pressed="true">👣 Paso a paso</button>
+            <button class="opt" data-val="solo" aria-pressed="false">🚀 Yo solo</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="layout">
+      <section class="panel" aria-labelledby="vTitle" style="margin-bottom:0">
+        <div class="sheet-head">
+          <h2 id="vTitle">Ejercicio <span id="vNum">1</span></h2>
+          <div class="chips" id="vChips"></div>
+        </div>
+        <div class="names" id="vNames"></div>
+        <div class="prompt" id="vPrompt" role="status" aria-live="polite"></div>
+        <div class="board-wrap"><div class="board" id="board"></div></div>
+        <div class="hint vh" id="vHint" hidden></div>
+        <div class="notice done" id="vDone" hidden>
+          <div class="stars" id="vStars" aria-hidden="true"></div>
+          <p class="msg" id="vDoneMsg"></p>
+          <button class="btn mint" id="vNext">➡️ Siguiente ejercicio</button>
+        </div>
+        <div class="actions">
+          <button class="btn sky" id="vCheck" hidden>🔍 Revisar</button>
+          <button class="btn sun" id="vHelp">💡 Ayuda</button>
+          <button class="btn lilac" id="vNew">🎲 Otro ejercicio</button>
+          <button class="btn mint" id="vFinish">🏁 ¡Ya terminé!</button>
+        </div>
+        <p class="live" id="vLive" role="status" aria-live="polite"></p>
+      </section>
+
+      <aside class="panel help" aria-labelledby="vHelpTitle" style="margin-bottom:0">
+        <h2 id="vHelpTitle">🧭 ¿Cómo multiplico en columnas?</h2>
+        <details open>
+          <summary>📚 Cómo se llaman las partes</summary>
+          <div class="dbody">
+            <ul>
+              <li><b>Multiplicando</b>: el número de arriba, el que se multiplica.</li>
+              <li><b>Multiplicador</b>: el número de abajo, el que dice cuántas veces.</li>
+              <li><b>Factores</b>: el multiplicando y el multiplicador juntos.</li>
+              <li><b>Productos parciales</b>: las filas que salen al multiplicar por cada cifra del multiplicador.</li>
+              <li><b>Producto</b>: el resultado final.</li>
+              <li><b>Llevada</b>: la cifra que pasa a la siguiente columna.</li>
+            </ul>
+            <p style="margin:8px 0 0"><b>Ojo:</b> numerador y denominador son las partes de una fracción (como 3/4), no de la multiplicación.</p>
+          </div>
+        </details>
+        <details>
+          <summary>👣 Los pasos</summary>
+          <div class="dbody">
+            <ol>
+              <li>Empieza siempre por la <b>derecha</b>: las unidades.</li>
+              <li>Multiplica la cifra de arriba por el número de abajo.</li>
+              <li>Escribe la <b>última cifra</b> del resultado debajo de la raya.</li>
+              <li>Si el resultado tiene dos cifras, la primera la <b>llevas</b>: escríbela arriba de la siguiente columna.</li>
+              <li>En la siguiente columna multiplica y <b>suma lo que llevas</b>.</li>
+              <li>Al final, <b>baja</b> lo que te quedó llevando.</li>
+              <li>Si el multiplicador tiene más cifras, haz una fila (<b>producto parcial</b>) por cada una, corriéndola un lugar a la izquierda, y después <b>suma</b> las filas.</li>
+            </ol>
+          </div>
+        </details>
+        <details>
+          <summary>🔎 Ejemplo: 352 × 3</summary>
+          <div class="dbody">
+            <ul>
+              <li>Unidades: 2 × 3 = 6. Escribo 6.</li>
+              <li>Decenas: 5 × 3 = 15. Escribo 5 y llevo 1 arriba del 3.</li>
+              <li>Centenas: 3 × 3 = 9, más 1 que llevo = 10. Escribo 0 y llevo 1.</li>
+              <li>Ya no hay más números: bajo el 1.</li>
+              <li>Resultado: <span class="ex-demo">1056</span> ✔</li>
+            </ul>
+          </div>
+        </details>
+        <details>
+          <summary>🔎 Ejemplo con dos cifras: 24 × 13</summary>
+          <div class="dbody">
+            <ul>
+              <li>Primer producto parcial: 24 × 3 = 72.</li>
+              <li>Segundo: 24 × 1 (decenas) = 24, pero la fila se corre un lugar. Se pone un 0 gris y queda 240.</li>
+              <li>Suma de los productos parciales: 72 + 240 = 312.</li>
+              <li>Producto: <span class="ex-demo">312</span> ✔</li>
+            </ul>
+          </div>
+        </details>
+        <details>
+          <summary>🎨 Los colores de las columnas</summary>
+          <div class="dbody">
+            <div class="legend">
+              <span class="pc0">U unidades</span><span class="pc1">D decenas</span><span class="pc2">C centenas</span>
+              <span class="pc3">UM unidades de mil</span><span class="pc4">DM decenas de mil</span>
+            </div>
+          </div>
+        </details>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Resultados y envío -->
+  <section class="panel" id="results" aria-labelledby="resTitle" style="margin-top:26px" hidden>
+    <h2 id="resTitle">🎉 ¡Terminaste!</h2>
+    <div class="result-top">
+      <div class="score" id="score"></div>
+      <div class="stars" id="stars" aria-hidden="true"></div>
+    </div>
+    <p class="msg" id="resMsg"></p>
+    <div id="missedBox" hidden>
+      <b>Para repasar:</b>
+      <ul class="missed" id="missed"></ul>
+    </div>
+    <div class="actions">
+      <button class="btn lilac" id="keepPracticing">✏️ Seguir practicando</button>
+      <button class="btn sun" id="newSet2">🎲 Ejercicios nuevos</button>
+    </div>
+
+    <div class="send">
+      <h3>📨 Enviar mis resultados</h3>
+      <p class="lead" style="margin-bottom:0">Un maestro, maestra o familiar revisa tus resultados y marca “Aprobado para enviar”.</p>
+      <div class="form-grid">
+        <div class="field">
+          <label for="stuName">Nombre del estudiante</label>
+          <input type="text" id="stuName" autocomplete="name" maxlength="60">
+        </div>
+        <div class="field">
+          <label for="toEmail">Correo de quien recibe (opcional)</label>
+          <input type="email" id="toEmail" autocomplete="off" maxlength="120">
+        </div>
+        <div class="field">
+          <label for="approver">Nombre de quien aprueba</label>
+          <input type="text" id="approver" maxlength="60">
+        </div>
+      </div>
+      <label class="approve" id="approveLabel">
+        <input type="checkbox" id="approved">
+        <span>✅ Aprobado para enviar<small>Marca esta casilla cuando hayas revisado los resultados.</small></span>
+      </label>
+      <textarea class="report" id="report" readonly aria-label="Vista previa del resultado"></textarea>
+      <div class="actions">
+        <button class="btn mint" id="sendBtn" disabled>📨 Enviar por correo</button>
+        <button class="btn sky" id="copyBtn" disabled>📋 Copiar resultado</button>
+      </div>
+      <p class="sendmsg" id="sendMsg" role="status" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <p class="foot">Hecho para practicar un poquito cada día. ¡Tú puedes!</p>
+</main>
+
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<script>
+(function(){
+  'use strict';
+  var COLS = ['coral','sun','mint','sky','lilac'];
+  var st = { op:'mul', factors:2, max:10, count:10 };
+  var items = [], finished = false, confirming = false, rep = null;
+
+  function $(s, r){ return (r||document).querySelector(s); }
+  function $$(s, r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); }
+  function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+  function setLive(t){ $('#live').textContent = t; }
+
+  /* ---------- Título con bloques de colores ---------- */
+  (function buildTitle(){
+    var h = $('#title'), k = 0;
+    'NÚMEROS LOCOS'.split(' ').forEach(function(w){
+      var d = document.createElement('div'); d.className='word'; d.setAttribute('aria-hidden','true');
+      w.split('').forEach(function(ch){
+        var s = document.createElement('span'); s.className='blk '+COLS[k%COLS.length]; s.textContent=ch; d.appendChild(s); k++;
+      });
+      h.appendChild(d);
+    });
+  })();
+
+  /* ---------- Generación de ejercicios ---------- */
+  function genMul(){
+    var n = st.factors;
+    var cap = n===2 ? st.max : (n===3 ? Math.min(st.max,6) : Math.min(st.max,5));
+    var nums = [];
+    for(var i=0;i<n;i++) nums.push(rnd(2,cap));
+    return { type:'mul', nums:nums, answer:nums.reduce(function(a,b){return a*b;},1) };
+  }
+  function genDiv(){
+    var d = rnd(2,st.max), q = rnd(2,st.max);
+    return { type:'div', nums:[d*q,d], answer:q };
+  }
+  function generate(){
+    var seen = {}, guard = 0;
+    items = [];
+    while(items.length < st.count){
+      guard++;
+      var t = st.op==='mix' ? (Math.random()<0.5?'mul':'div') : st.op;
+      var it = t==='mul' ? genMul() : genDiv();
+      var key = it.type+':'+it.nums.join(',');
+      if(seen[key] && guard<300) continue;
+      seen[key] = 1;
+      it.value=''; it.status=''; it.tries=0; it.hint=false;
+      items.push(it);
+    }
+    finished = false; confirming = false;
+    $('#confirm').hidden = true;
+    $('#results').hidden = true;
+    renderList();
+    updateProgress();
+    setLive('');
+  }
+
+  /* ---------- Pistas ---------- */
+  function hintHTML(it){
+    var a = it.nums[0], b = it.nums[1];
+    if(it.type==='div'){
+      return '<b>💡 Pista:</b> piensa en la tabla del '+b+' (el divisor). Cuenta de '+b+' en '+b+' hasta llegar a '+a+' (el dividendo)'+
+        ' y cuenta cuántos saltos diste: ese es el resultado.<br>Otra forma: ¿'+b+' × ? = '+a+'?<br>Comprueba: tu respuesta × '+b+' debe dar '+a+'.';
+    }
+    if(it.nums.length===2){
+      var base = Math.max(a,b), rep = Math.min(a,b), seq = [], k;
+      for(k=1;k<rep;k++) seq.push(base*k);
+      var sum = []; for(k=0;k<rep;k++) sum.push(base);
+      return '<b>💡 Pista:</b> '+a+' × '+b+' es lo mismo que sumar '+base+', '+rep+' veces:<br>'+sum.join(' + ')+
+        '<br>Cuenta de '+base+' en '+base+': '+seq.join(', ')+', ¿?';
+    }
+    var first = a*b, rest = it.nums.slice(2);
+    return '<b>💡 Pista:</b> hazlo por partes.<br>Paso 1: '+a+' × '+b+' = '+first+
+      '<br>Paso 2: multiplica '+first+' × '+rest.join(' y luego el resultado × ')+'.';
+  }
+
+  /* ---------- Dibujar lista ---------- */
+  function renderList(){
+    var ol = $('#list'); ol.innerHTML = '';
+    items.forEach(function(it,i){
+      var li = document.createElement('li');
+      li.className = 'ex'; li.dataset.i = i;
+      var parts = [];
+      it.nums.forEach(function(n,j){
+        if(j>0) parts.push('<span class="op" aria-hidden="true">'+(it.type==='mul'?'×':'÷')+'</span>');
+        parts.push('<span class="tile '+COLS[(i+j)%COLS.length]+'">'+n+'</span>');
+      });
+      var spoken = it.nums.join(it.type==='mul' ? ' por ' : ' entre ');
+      li.innerHTML =
+        '<span class="n '+COLS[i%COLS.length]+'" aria-hidden="true">'+(i+1)+'</span>'+
+        '<div class="expr" role="group" aria-label="'+spoken+'">'+parts.join('')+'<span aria-hidden="true">=</span></div>'+
+        '<input class="ans" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" aria-label="Respuesta del ejercicio '+(i+1)+': '+spoken+'">'+
+        '<div class="meta"><span class="badge"></span><button type="button" class="mini">💡 Ayuda</button></div>'+
+        '<div class="hint" hidden></div>';
+      ol.appendChild(li);
+    });
+  }
+
+  function updateCard(i){
+    var it = items[i], li = $('.ex[data-i="'+i+'"]');
+    if(!li) return;
+    var inp = $('.ans', li), badge = $('.badge', li), hint = $('.hint', li), hbtn = $('.mini', li);
+    li.className = 'ex' + (it.status==='ok' ? ' ok' : (it.status==='bad'||it.status==='skip' ? ' bad' : ''));
+    inp.value = it.value;
+    inp.readOnly = (it.status==='ok') || finished;
+    var txt = '';
+    if(it.status==='ok') txt = '✅ ¡Correcto!';
+    else if(it.status==='bad') txt = finished ? '❌ Era '+it.answer : '🤔 Inténtalo otra vez';
+    else if(it.status==='skip') txt = '⏭️ Era '+it.answer;
+    badge.textContent = txt;
+    hint.hidden = !it.hint;
+    if(it.hint) hint.innerHTML = hintHTML(it);
+    hbtn.setAttribute('aria-expanded', it.hint ? 'true' : 'false');
+    hbtn.textContent = it.hint ? '🙈 Ocultar' : '💡 Ayuda';
+  }
+
+  function updateProgress(){
+    var answered = items.filter(function(x){return x.value!=='';}).length;
+    var ok = items.filter(function(x){return x.status==='ok';}).length;
+    $('#chips').innerHTML = '<span class="chip">✏️ '+answered+' de '+items.length+' respondidas</span><span class="chip">✅ '+ok+' correctas</span>';
+    $('#fill').style.width = (items.length ? answered/items.length*100 : 0)+'%';
+  }
+
+  /* ---------- Revisar ---------- */
+  function checkOne(i){
+    var it = items[i];
+    if(it.status==='ok' || it.value==='') return null;
+    if(Number(it.value)===it.answer){ it.status='ok'; }
+    else { it.status='bad'; it.tries++; if(it.tries>=2) it.hint=true; }
+    updateCard(i); updateProgress();
+    return it.status;
+  }
+  function focusNext(from){
+    for(var k=1;k<=items.length;k++){
+      var j = (from+k)%items.length;
+      if(items[j].status!=='ok'){ var el=$('.ex[data-i="'+j+'"] .ans'); if(el){ el.focus(); } return; }
+    }
+  }
+  function checkAll(){
+    var did = 0;
+    items.forEach(function(it,i){ if(it.value!=='' && it.status!=='ok'){ checkOne(i); did++; } });
+    var ok = items.filter(function(x){return x.status==='ok';}).length;
+    if(!did && !ok) setLive('Escribe al menos una respuesta para revisar.');
+    else setLive('Llevas '+ok+' correcta'+(ok===1?'':'s')+' de '+items.length+'. ¡Sigue así!');
+  }
+
+  /* ---------- Terminar ---------- */
+  function onFinish(){
+    var un = items.filter(function(x){return x.value==='';}).length;
+    if(un>0 && !confirming){
+      confirming = true;
+      $('#confirmText').textContent = 'Te faltan '+un+' ejercicio'+(un===1?'':'s')+' sin responder. ¿Quieres terminar de todos modos?';
+      $('#confirm').hidden = false;
+      return;
+    }
+    doFinish();
+  }
+  function doFinish(){
+    confirming = false; $('#confirm').hidden = true;
+    finished = true;
+    items.forEach(function(it){
+      if(it.value===''){ it.status='skip'; }
+      else if(it.status!=='ok'){ it.status = Number(it.value)===it.answer ? 'ok' : 'bad'; }
+    });
+    items.forEach(function(_,i){ updateCard(i); });
+    updateProgress();
+    showResults();
+  }
+
+  function stars(pct){ return pct>=90 ? 3 : pct>=70 ? 2 : pct>=40 ? 1 : 0; }
+  function showResults(){
+    var total = items.length;
+    var ok = items.filter(function(x){return x.status==='ok';}).length;
+    var pct = Math.round(ok/total*100);
+    $('#score').innerHTML = ok+' <small>de '+total+' ('+pct+'%)</small>';
+    var s = stars(pct), html = '';
+    for(var k=0;k<3;k++) html += '<span class="'+(k<s?'on':'off')+'">★</span>';
+    $('#stars').innerHTML = html;
+    $('#resMsg').textContent = pct===100 ? '¡Perfecto! Eres un campeón de los números.' :
+      pct>=70 ? '¡Muy bien! Casi lo tienes todo.' :
+      pct>=40 ? '¡Buen intento! Repasa las que fallaste y vuelve a practicar.' :
+      'Sigue practicando: cada intento te hace mejor. Lee la ayuda y prueba otra vez.';
+    var missed = items.map(function(it,i){return {it:it,i:i};}).filter(function(o){return o.it.status!=='ok';});
+    var ul = $('#missed'); ul.innerHTML = '';
+    missed.forEach(function(o){
+      var li = document.createElement('li');
+      li.textContent = o.it.nums.join(o.it.type==='mul'?' × ':' ÷ ')+' = '+o.it.answer+(o.it.value!==''?' (escribiste '+o.it.value+')':' (sin responder)');
+      ul.appendChild(li);
+    });
+    $('#missedBox').hidden = missed.length===0;
+    rep = { source:'quick', practice: modeLabel(), result: ok+' de '+total+' ('+pct+'%)',
+      lines: items.map(function(it,i){
+        var line = (i+1)+'. '+it.nums.join(it.type==='mul' ? ' × ' : ' ÷ ')+' = '+it.answer;
+        if(it.status==='ok') return line+'  ✔';
+        return line+(it.value!=='' ? '  ✘ (respondió '+it.value+')' : '  ✘ (sin responder)');
+      }) };
+    $('#approved').checked = false;
+    $('#approver').value = '';
+    $('#sendMsg').textContent = '';
+    var sec = $('#results'); sec.hidden = false;
+    updateSend();
+    var rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    sec.scrollIntoView({behavior: rm ? 'auto' : 'smooth', block:'start'});
+    if(pct>=90) confetti();
+  }
+
+  /* ---------- Reporte y envío ---------- */
+  function modeLabel(){
+    var m = st.op==='mul' ? 'Multiplicación de '+st.factors+' números' :
+            st.op==='div' ? 'División' :
+            'Mezcla (multiplicación de '+st.factors+' números y división)';
+    return m+', números hasta '+st.max;
+  }
+  function buildReport(){
+    var lines = [
+      'Resultados de práctica de matemáticas',
+      'Estudiante: '+($('#stuName').value.trim()||'(sin nombre)'),
+      'Fecha: '+new Date().toLocaleDateString('es-CO'),
+      'Práctica: '+(rep ? rep.practice : ''),
+      'Resultado: '+(rep ? rep.result : ''),
+      'Aprobado por: '+($('#approver').value.trim()||'(pendiente)'),
+      '',
+      'Ejercicios:'
+    ];
+    if(rep) lines = lines.concat(rep.lines);
+    return lines.join('\n');
+  }
+  function updateSend(){
+    var appr = $('#approved').checked, name = $('#stuName').value.trim(), who = $('#approver').value.trim();
+    $('#approveLabel').classList.toggle('on', appr);
+    var ready = appr && name && who;
+    $('#sendBtn').disabled = !ready;
+    $('#copyBtn').disabled = !ready;
+    $('#report').value = buildReport();
+    var m = $('#sendMsg');
+    if(!appr) m.textContent = 'Marca “Aprobado para enviar” para activar los botones.';
+    else if(!ready){
+      var miss = []; if(!name) miss.push('el nombre del estudiante'); if(!who) miss.push('el nombre de quien aprueba');
+      m.textContent = 'Falta escribir '+miss.join(' y ')+'.';
+    } else if(m.dataset.sent!=='1') m.textContent = '¡Todo listo para enviar!';
+  }
+  function copyReport(){
+    var txt = $('#report').value, m = $('#sendMsg');
+    function fallback(){
+      var t = $('#report'); t.removeAttribute('readonly'); t.select();
+      var okc = false; try{ okc = document.execCommand('copy'); }catch(e){}
+      t.setAttribute('readonly',''); 
+      m.textContent = okc ? '📋 ¡Copiado! Ya puedes pegarlo en un mensaje.' : 'Selecciona el texto de arriba y cópialo manualmente.';
+    }
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(txt).then(function(){ m.textContent='📋 ¡Copiado! Ya puedes pegarlo en un mensaje.'; }, fallback);
+      } else fallback();
+    }catch(e){ fallback(); }
+  }
+  function sendMail(){
+    var to = $('#toEmail').value.trim();
+    var subj = 'Resultados de práctica de '+($('#stuName').value.trim()||'estudiante');
+    var href = 'mailto:'+to+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent($('#report').value);
+    var a = document.createElement('a'); a.href = href; a.target = '_blank'; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    var m = $('#sendMsg'); m.dataset.sent = '1';
+    m.textContent = '📨 Se abrió tu programa de correo. Si no apareció nada, usa “Copiar resultado” y pégalo en un mensaje.';
+  }
+
+  /* ---------- Confeti ---------- */
+  function confetti(){
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var c = $('#confetti'), x = c.getContext('2d');
+    c.width = innerWidth; c.height = innerHeight;
+    var cols = ['#FF5D73','#FFC93C','#26C9A8','#38A8FF','#BFA8FF'];
+    var ps = [];
+    for(var i=0;i<140;i++) ps.push({x:Math.random()*c.width, y:-20-Math.random()*c.height*0.5, vx:(Math.random()-0.5)*4, vy:2+Math.random()*4, s:6+Math.random()*8, r:Math.random()*6, vr:(Math.random()-0.5)*0.3, c:cols[i%cols.length]});
+    var t = 0;
+    (function frame(){
+      x.clearRect(0,0,c.width,c.height);
+      ps.forEach(function(p){
+        p.x+=p.vx; p.y+=p.vy; p.r+=p.vr;
+        x.save(); x.translate(p.x,p.y); x.rotate(p.r); x.fillStyle=p.c; x.fillRect(-p.s/2,-p.s/2,p.s,p.s*0.6); x.restore();
+      });
+      if(++t<180) requestAnimationFrame(frame); else x.clearRect(0,0,c.width,c.height);
+    })();
+  }
+
+  /* ---------- Configuración ---------- */
+  function syncSettingsUI(){
+    $$('#tabQuick .group').forEach(function(g){
+      var key = g.dataset.key;
+      $$('.opt', g).forEach(function(b){ b.setAttribute('aria-pressed', String(st[key])===b.dataset.val ? 'true':'false'); });
+    });
+    var off = st.op==='div';
+    var fg = $('#factorsGroup');
+    fg.classList.toggle('off', off);
+    $$('.opt', fg).forEach(function(b){ b.disabled = off; });
+    $('#factorsNote').textContent = off ? 'Solo se usa al multiplicar.' : 'Con 3 o 4 números usamos números más pequeños.';
+  }
+  $$('#tabQuick .group .opt').forEach(function(b){
+    b.addEventListener('click', function(){
+      var key = b.closest('.group').dataset.key;
+      st[key] = key==='op' ? b.dataset.val : Number(b.dataset.val);
+      syncSettingsUI(); generate();
+    });
+  });
+
+  /* ---------- Eventos de la lista ---------- */
+  var list = $('#list');
+  list.addEventListener('input', function(e){
+    if(!e.target.classList.contains('ans')) return;
+    var i = Number(e.target.closest('.ex').dataset.i), it = items[i];
+    var v = e.target.value.replace(/\D/g,'').slice(0,6);
+    e.target.value = v; it.value = v;
+    if(it.status==='bad'){ it.status=''; updateCard(i); e.target.focus(); }
+    updateProgress();
+  });
+  list.addEventListener('keydown', function(e){
+    if(e.key!=='Enter' || !e.target.classList.contains('ans')) return;
+    e.preventDefault();
+    var i = Number(e.target.closest('.ex').dataset.i);
+    var r = checkOne(i);
+    if(r==='ok') focusNext(i);
+    else if(r===null) setLive('Escribe tu respuesta primero.');
+  });
+  list.addEventListener('click', function(e){
+    var btn = e.target.closest('.mini'); if(!btn) return;
+    var i = Number(btn.closest('.ex').dataset.i);
+    items[i].hint = !items[i].hint; updateCard(i);
+  });
+
+  $('#checkAll').addEventListener('click', checkAll);
+  $('#finish').addEventListener('click', onFinish);
+  $('#yesFinish').addEventListener('click', doFinish);
+  $('#keepGoing').addEventListener('click', function(){ confirming=false; $('#confirm').hidden=true; });
+  $('#newSet').addEventListener('click', generate);
+  function toTop(){ window.scrollTo({top:0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}); }
+  $('#newSet2').addEventListener('click', function(){
+    $('#results').hidden = true;
+    if(rep && rep.source==='vert'){ vNew(); } else { generate(); }
+    toTop();
+  });
+  $('#keepPracticing').addEventListener('click', function(){
+    $('#results').hidden = true;
+    if(rep && rep.source==='vert'){ toTop(); vFocusCur(); return; }
+    finished = false;
+    items.forEach(function(it,i){ if(it.status==='skip') it.status=''; updateCard(i); });
+    var first = items.findIndex(function(x){return x.status!=='ok';});
+    if(first>=0){ var el=$('.ex[data-i="'+first+'"] .ans'); if(el) el.focus(); }
+    setLive('¡Vamos a seguir! Puedes corregir tus respuestas.');
+  });
+
+  /* ---------- Envío ---------- */
+  ['#stuName','#toEmail','#approver'].forEach(function(s){
+    $(s).addEventListener('input', function(){
+      $('#sendMsg').dataset.sent = '0';
+      if(s==='#stuName'){ try{ localStorage.setItem('nl_name', $(s).value); }catch(e){} }
+      updateSend();
+    });
+  });
+  $('#approved').addEventListener('change', function(){ $('#sendMsg').dataset.sent='0'; updateSend(); });
+  $('#sendBtn').addEventListener('click', sendMail);
+  $('#copyBtn').addEventListener('click', copyReport);
+
+  /* ---------- Tabla de multiplicar ---------- */
+  (function buildTable(){
+    var tabs = $('#tableTabs'), out = $('#tableOut');
+    function show(n){
+      out.innerHTML = '';
+      for(var k=1;k<=12;k++){ var li=document.createElement('li'); li.textContent = n+' × '+k+' = '+(n*k); out.appendChild(li); }
+      $$('.opt', tabs).forEach(function(b){ b.setAttribute('aria-pressed', Number(b.dataset.n)===n ? 'true':'false'); });
+    }
+    for(var n=1;n<=12;n++){
+      var b = document.createElement('button'); b.type='button'; b.className='opt'; b.dataset.n=n; b.textContent=n;
+      b.addEventListener('click', (function(v){ return function(){ show(v); }; })(n));
+      tabs.appendChild(b);
+    }
+    show(2);
+  })();
+
+  /* ---------- Pestañas ---------- */
+  function showTab(which){
+    var q = which==='quick';
+    $('#tabQuick').hidden = !q;
+    $('#tabVert').hidden = q;
+    $('#tabQuickBtn').setAttribute('aria-pressed', q ? 'true':'false');
+    $('#tabVertBtn').setAttribute('aria-pressed', q ? 'false':'true');
+    $('#results').hidden = true;
+    if(!q) vFocusCur();
+  }
+  $('#tabQuickBtn').addEventListener('click', function(){ showTab('quick'); });
+  $('#tabVertBtn').addEventListener('click', function(){ showTab('vert'); });
+
+  /* ---------- Multiplicación en columnas ---------- */
+  var V = { n:3, q:1, maxM:9, carries:1, mode:'guided' };
+  var vx = null, vlog = [];
+  var PLACES = ['unidades','decenas','centenas','unidades de mil','decenas de mil','centenas de mil','unidades de millón'];
+  var PABBR = ['U','D','C','UM','DM','CM','UMM'];
+
+  // Columnas de multiplicar el multiplicando (a, izq→der) por UNA cifra m
+  function vCols(a, m){
+    var n = a.length, cols = [], carry = 0, k;
+    for(k=0;k<n;k++){
+      var d = a[n-1-k], p = d*m + carry;
+      cols.push({d:d, carryIn:carry, prod:p, digit:p%10, carryOut:Math.floor(p/10)});
+      carry = Math.floor(p/10);
+    }
+    if(carry>0) cols.push({d:null, carryIn:carry, prod:carry, digit:carry, carryOut:0, virtual:true});
+    return cols;
+  }
+  function vBuild(a, b){
+    var n = a.length, q = b.length, rows = [], j, c;
+    for(j=0;j<q;j++) rows.push(vCols(a, b[q-1-j]));
+    var add = null, R;
+    if(q===1){ R = rows[0].length; }
+    else {
+      var maxEnd = 0;
+      for(j=0;j<q;j++) maxEnd = Math.max(maxEnd, j+rows[j].length);
+      add = []; var carry = 0;
+      for(c=0;c<maxEnd;c++){
+        var terms = [];
+        for(j=0;j<q;j++){ if(c>=j && c-j<rows[j].length) terms.push(rows[j][c-j].digit); }
+        var sum = carry + terms.reduce(function(s,x){ return s+x; }, 0);
+        add.push({terms:terms, carryIn:carry, sum:sum, digit:sum%10, carryOut:Math.floor(sum/10)});
+        carry = Math.floor(sum/10);
+      }
+      if(carry>0) add.push({terms:[], carryIn:carry, sum:carry, digit:carry, carryOut:0, virtual:true});
+      R = add.length;
+    }
+    return { a:a, b:b, n:n, q:q, rows:rows, add:add, R:R, answer:Number(a.join(''))*Number(b.join('')) };
+  }
+  function vHasCarry(md){
+    return md.rows.some(function(cols){ return cols.some(function(x){ return x.carryOut>0; }); });
+  }
+  function vGenerate(){
+    var n = V.n, q = V.q, i, tries = 0, a, b, md, good;
+    do{
+      tries++;
+      var top = V.carries ? V.maxM : Math.min(V.maxM,4);
+      b = []; for(i=0;i<q;i++) b.push(rnd(2,top));
+      var lim = V.carries ? 9 : Math.floor(9/Math.max.apply(null,b));
+      a = []; for(i=0;i<n;i++) a.push(i===0 ? rnd(1,lim) : rnd(0,lim));
+      md = vBuild(a,b);
+      var mc = vHasCarry(md), ac = !!md.add && md.add.some(function(x){ return x.carryOut>0; });
+      good = V.carries ? mc : (!mc && !ac);
+    } while(!good && tries<600);
+    if(!good && !V.carries){
+      b = []; for(i=0;i<q;i++) b.push(2);
+      a = []; for(i=0;i<n;i++) a.push(i===0 ? 1 : rnd(0,1));
+      md = vBuild(a,b);
+    }
+    var steps = [], exp = {}, j;
+    md.rows.forEach(function(cols, j){
+      cols.forEach(function(x,k){
+        steps.push({t:'p', j:j, k:k, col:k+j, id:'p-'+j+'-'+k});
+        exp['p-'+j+'-'+k] = x.digit;
+        if(k>=1 && k<n) exp['pc-'+j+'-'+k] = x.carryIn;
+        if(!x.virtual && x.carryOut>0 && k<n-1) steps.push({t:'pc', j:j, k:k+1, col:k+1+j, id:'pc-'+j+'-'+(k+1)});
+      });
+    });
+    if(md.add){
+      md.add.forEach(function(x,c){
+        steps.push({t:'s', c:c, col:c, id:'s-'+c});
+        exp['s-'+c] = x.digit;
+        if(c>=1) exp['sc-'+c] = x.carryIn;
+        if(!x.virtual && x.carryOut>0 && c<md.R-1) steps.push({t:'sc', c:c+1, col:c+1, id:'sc-'+(c+1)});
+      });
+    }
+    md.steps = steps; md.exp = exp; md.cur = 0; md.errors = 0; md.done = false; md.hint = 0;
+    vx = md;
+  }
+
+  function vBDigit(j){ return vx.b[vx.q-1-j]; }
+
+  function vNames(){
+    var h = '<span><b>Multiplicando</b> (arriba): '+vx.a.join('')+'</span>'+
+            '<span><b>Multiplicador</b> (abajo): '+vx.b.join('')+'</span>';
+    if(vx.q>1) h += '<span><b>Productos parciales</b>: '+vx.q+' filas</span>';
+    h += '<span><b>Producto</b> (resultado): '+(vx.done ? vx.answer : '❓')+'</span>';
+    $('#vNames').innerHTML = h;
+  }
+
+  function vRender(){
+    var b = $('#board'), R = vx.R, n = vx.n, q = vx.q, solo = V.mode==='solo', k, j, c, h = '';
+    var total = q===1 ? 6 : 7+2*q;
+    var rowP = function(j){ return j===0 ? 6 : 6+2*j; };
+    var rowPC = function(j){ return j===0 ? 2 : 5+2*j; };
+    var rowAC = 5+2*q, rowL2 = 6+2*q, rowF = 7+2*q;
+    var gc = function(c){ return (R-c)+1; };
+    b.style.setProperty('--cols', R);
+    b.style.gridTemplateColumns = 'var(--sign) repeat('+R+', var(--cell))';
+    b.setAttribute('role','group');
+    b.setAttribute('aria-label','Multiplicación en columnas: '+vx.a.join('')+' por '+vx.b.join(''));
+    function inp(id, cls, col, row, label){
+      return '<input class="vin '+cls+'" data-id="'+id+'" data-col="'+(col)+'" type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="'+label+'" style="grid-column:'+gc(col)+';grid-row:'+row+'">';
+    }
+    for(c=0;c<R;c++) h += '<div class="band" data-col="'+c+'" style="grid-column:'+gc(c)+';grid-row:1/'+(total+1)+'"></div>';
+    for(c=0;c<R;c++) h += '<div class="plabel" style="grid-column:'+gc(c)+';grid-row:1"><span class="pc'+(c%5)+'" title="'+PLACES[c]+'">'+PABBR[c]+'</span></div>';
+    // multiplicando
+    for(k=n-1;k>=0;k--) h += '<div class="vd pc'+(k%5)+'" style="grid-column:'+gc(k)+';grid-row:3">'+vx.a[n-1-k]+'</div>';
+    // multiplicador
+    h += '<div class="vsign" style="grid-column:1;grid-row:4" aria-label="por">×</div>';
+    for(j=q-1;j>=0;j--) h += '<div class="vd '+(q===1?'vm':'pc'+(j%5))+'" style="grid-column:'+gc(j)+';grid-row:4">'+vBDigit(j)+'</div>';
+    h += '<div class="vline" style="grid-column:1/-1;grid-row:5"></div>';
+    // productos parciales
+    for(j=0;j<q;j++){
+      var rows = vx.rows[j];
+      for(k=1;k<n;k++){
+        if(solo || (rows[k-1] && rows[k-1].carryOut>0)){
+          h += inp('pc-'+j+'-'+k, 'car', k+j, rowPC(j), 'Lo que llevas sobre la columna de las '+PLACES[k]+(q>1?', fila '+(j+1):''));
+        }
+      }
+      for(c=0;c<j;c++) h += '<div class="vd ph" style="grid-column:'+gc(c)+';grid-row:'+rowP(j)+'" aria-hidden="true">0</div>';
+      for(k=0;k<rows.length;k++){
+        h += inp('p-'+j+'-'+k, 'res'+(q===1?' fin':''), k+j, rowP(j), (q===1?'Producto':'Producto parcial '+(j+1))+', columna de las '+PLACES[k+j]);
+      }
+      if(q>1) h += '<div class="rowchip pc'+(j%5)+'" style="grid-column:1;grid-row:'+rowP(j)+'" title="Multiplica por la cifra de las '+PLACES[j]+'">×'+vBDigit(j)+'</div>';
+    }
+    // suma de productos parciales
+    if(q>1){
+      h += '<div class="vsign" style="grid-column:1;grid-row:'+rowAC+'">+</div>';
+      for(c=1;c<R;c++){
+        if(solo || vx.add[c].carryIn>0) h += inp('sc-'+c, 'car', c, rowAC, 'Lo que llevas en la suma, columna de las '+PLACES[c]);
+      }
+      h += '<div class="vline" style="grid-column:1/-1;grid-row:'+rowL2+'"></div>';
+      h += '<div class="vsign" style="grid-column:1;grid-row:'+rowF+'">=</div>';
+      for(c=0;c<R;c++) h += inp('s-'+c, 'res fin', c, rowF, 'Producto, columna de las '+PLACES[c]);
+    }
+    b.innerHTML = h;
+  }
+
+  function vCurStep(){ return V.mode==='guided' && !vx.done ? vx.steps[vx.cur] : null; }
+  function vApplyState(){
+    var cur = vCurStep(), guided = V.mode==='guided';
+    $$('#board .vin').forEach(function(inp){
+      var isCur = !!cur && cur.id===inp.dataset.id;
+      var ok = inp.classList.contains('ok');
+      inp.classList.toggle('now', isCur);
+      if(guided){
+        inp.readOnly = !isCur;
+        inp.tabIndex = isCur ? 0 : -1;
+        inp.classList.toggle('dim', !isCur && !ok && !vx.done);
+      } else {
+        inp.readOnly = vx.done || ok;
+        inp.tabIndex = 0;
+        inp.classList.remove('dim');
+      }
+    });
+    $$('#board .band').forEach(function(band){
+      band.classList.toggle('on', !!cur && Number(band.dataset.col)===cur.col);
+    });
+  }
+
+  function vSumTerms(x){
+    var t = x.terms.slice();
+    if(x.carryIn>0) t.push(x.carryIn);
+    return t;
+  }
+
+  function vPrompt(){
+    var el = $('#vPrompt');
+    if(V.mode==='solo'){
+      el.innerHTML = 'Escribe el <b>producto</b> empezando por la <b>derecha</b>. Las cajitas de arriba son para lo que llevas.'+
+        (vx.q>1 ? ' Haz una fila (<b>producto parcial</b>) por cada cifra del multiplicador y luego suma.' : '');
+      return;
+    }
+    var s = vCurStep();
+    if(!s){ el.innerHTML = '¡Lo lograste! 🎉'; return; }
+    var t = '', intro = '', x;
+    if(s.t==='p'){
+      x = vx.rows[s.j][s.k];
+      var bj = vBDigit(s.j);
+      if(s.k===0 && vx.q>1){
+        intro = s.j===0 ? 'Empieza por la cifra de las <b>unidades</b> del <b>multiplicador</b> (el '+bj+').' :
+          'Nueva fila: multiplica el <b>multiplicando</b> por la cifra de las <b>'+PLACES[s.j]+'</b> del <b>multiplicador</b> (el '+bj+'). Los ceros grises ya están puestos: la fila se corre un lugar.';
+      }
+      if(x.virtual) t = 'Ya no quedan más cifras en el multiplicando. <b>Baja</b> lo que llevas ⬇️.';
+      else t = '<span class="calc">'+x.d+' × '+bj+(x.carryIn ? ' + '+x.carryIn : '')+' = ?</span>'+
+               '<span>Columna de las <b>'+PLACES[s.k]+'</b> del multiplicando. Escribe abajo la <b>última cifra</b> del resultado. Si tiene dos cifras, la primera la llevas.</span>';
+    } else if(s.t==='pc'){
+      t = '¡Bien! Ahora escribe arriba, sobre la columna de las <b>'+PLACES[s.k]+'</b>, la cifra que <b>llevas</b> ⬆️.';
+    } else if(s.t==='s'){
+      x = vx.add[s.c];
+      if(s.c===0) intro = '¡Ahora suma los <b>productos parciales</b>, columna por columna!';
+      var terms = vSumTerms(x);
+      if(x.virtual) t = 'Ya no quedan más números. <b>Baja</b> lo que llevas ⬇️.';
+      else if(terms.length===1) t = 'En la columna de las <b>'+PLACES[s.c]+'</b> solo hay un número: ¡<b>bájalo</b>! ⬇️';
+      else t = '<span class="calc">'+terms.join(' + ')+' = ?</span><span>Suma la columna de las <b>'+PLACES[s.c]+'</b>. Escribe abajo la <b>última cifra</b>; si da dos cifras, la primera la llevas.</span>';
+    } else {
+      t = '¡Bien! Escribe arriba (en la fila de la suma), sobre la columna de las <b>'+PLACES[s.c]+'</b>, lo que <b>llevas</b> ⬆️.';
+    }
+    el.innerHTML = (intro ? '<span style="flex-basis:100%">'+intro+'</span>' : '') + t;
+  }
+
+  function vHintText(s, level){
+    var x, bj, base, l1, p;
+    if(s.t==='p'){
+      x = vx.rows[s.j][s.k]; bj = vBDigit(s.j);
+      if(x.virtual) return level<2 ? 'Mira el número que llevaste en la última columna. ¡Ese número baja!' : 'Escribe el '+x.digit+'.';
+      base = x.d*bj;
+      l1 = x.d+' × '+bj+' = '+base + (x.carryIn ? ', y '+base+' + '+x.carryIn+' (lo que llevas) = '+x.prod : '');
+      if(level<2) return l1+'.';
+      return l1+'. De '+x.prod+' escribe la última cifra ('+x.digit+')'+(x.carryOut ? ' y lleva '+x.carryOut+' a la siguiente columna' : '')+'.';
+    }
+    if(s.t==='pc'){
+      p = vx.rows[s.j][s.k-1];
+      if(level<2) return 'Antes salió '+p.prod+'. Lo que llevas es la primera cifra (las decenas).';
+      return 'Lleva el '+vx.rows[s.j][s.k].carryIn+'.';
+    }
+    if(s.t==='s'){
+      x = vx.add[s.c];
+      if(x.virtual) return level<2 ? 'Mira lo que llevaste en la última suma. ¡Ese número baja!' : 'Escribe el '+x.digit+'.';
+      var terms = vSumTerms(x);
+      if(terms.length===1) return 'Solo hay un número en esta columna: ¡bájalo!';
+      l1 = terms.join(' + ')+' = '+x.sum;
+      if(level<2) return l1+'.';
+      return l1+'. De '+x.sum+' escribe la última cifra ('+x.digit+')'+(x.carryOut ? ' y lleva '+x.carryOut : '')+'.';
+    }
+    p = vx.add[s.c-1];
+    if(level<2) return 'Antes salió '+p.sum+'. Lo que llevas es la primera cifra.';
+    return 'Lleva el '+vx.add[s.c].carryIn+'.';
+  }
+  function vShowHint(){
+    var s = vCurStep(); if(!s) return;
+    var h = $('#vHint');
+    h.innerHTML = '<b>💡 Pista:</b> '+vHintText(s, vx.hint);
+    h.hidden = false;
+  }
+  function vSoloHelp(){
+    var i, s, el;
+    for(i=0;i<vx.steps.length;i++){
+      s = vx.steps[i];
+      if(s.t!=='p' && s.t!=='s') continue;
+      el = $('#board .vin[data-id="'+s.id+'"]');
+      if(el && !el.classList.contains('ok')){
+        var h = $('#vHint');
+        h.innerHTML = '<b>💡 Pista:</b> '+vHintText(s, 2);
+        h.hidden = false;
+        return;
+      }
+    }
+  }
+
+  function vFocusCur(){
+    if(!vx || $('#tabVert').hidden || vx.done) return;
+    var id = V.mode==='guided' ? (vx.steps[vx.cur] && vx.steps[vx.cur].id) : 'p-0-0';
+    var el = id && $('#board .vin[data-id="'+id+'"]');
+    if(el){ el.focus(); el.select(); }
+  }
+
+  function vUpdateChips(){
+    var total = vlog.reduce(function(a,e){ return a+e.stars; }, 0);
+    $('#vChips').innerHTML = '<span class="chip">✅ '+vlog.length+' resuelto'+(vlog.length===1?'':'s')+'</span><span class="chip">⭐ '+total+'</span>';
+  }
+
+  function vSolved(){
+    if(vx.done) return;
+    vx.done = true;
+    var stars = vx.errors===0 ? 3 : (vx.errors<=2 ? 2 : 1);
+    vlog.push({ a:Number(vx.a.join('')), m:Number(vx.b.join('')), answer:vx.answer, errors:vx.errors, stars:stars });
+    var html = '';
+    for(var i=0;i<3;i++) html += '<span class="'+(i<stars?'on':'off')+'">★</span>';
+    $('#vStars').innerHTML = html;
+    $('#vDoneMsg').textContent = vx.a.join('')+' × '+vx.b.join('')+' = '+vx.answer+'. '+
+      (stars===3 ? '¡Perfecto, sin errores!' : stars===2 ? '¡Muy bien!' : '¡Lo lograste, sigue practicando!');
+    $('#vDone').hidden = false;
+    $('#vHint').hidden = true;
+    $$('#board .vin.res').forEach(function(inp){ inp.classList.remove('bad'); inp.classList.add('ok'); });
+    vApplyState(); vPrompt(); vUpdateChips(); vNames();
+    $('#vLive').textContent = '¡Correcto!';
+    if(stars===3) confetti();
+    $('#vNext').focus();
+  }
+
+  function vGuidedCheck(inp){
+    var cur = vCurStep();
+    if(!cur || inp.dataset.id!==cur.id || inp.value==='') return;
+    if(inp.value===String(vx.exp[cur.id])){
+      inp.classList.remove('bad'); inp.classList.add('ok');
+      vx.cur++; vx.hint = 0; $('#vHint').hidden = true; $('#vLive').textContent = '';
+      if(vx.cur>=vx.steps.length){ vSolved(); }
+      else { vApplyState(); vPrompt(); vFocusCur(); }
+    } else {
+      inp.classList.add('bad');
+      vx.errors++; vx.hint = Math.min(2, vx.hint+1);
+      vShowHint();
+      $('#vLive').textContent = 'Casi. Mira la pista e inténtalo otra vez.';
+      inp.select();
+    }
+  }
+  function vSoloAdvance(inp){
+    var i;
+    for(i=0;i<vx.steps.length;i++){
+      if(vx.steps[i].id===inp.dataset.id){
+        var nx = vx.steps[i+1];
+        if(nx){ var el = $('#board .vin[data-id="'+nx.id+'"]'); if(el){ el.focus(); el.select(); } }
+        return;
+      }
+    }
+  }
+  function vSoloCheck(){
+    if(vx.done || V.mode!=='solo') return;
+    var missing = 0, wrong = 0;
+    $$('#board .vin').forEach(function(inp){
+      var id = inp.dataset.id, v = inp.value, required = id.charAt(0)==='p' && id.indexOf('pc')!==0 || id.charAt(0)==='s' && id.indexOf('sc')!==0;
+      if(inp.classList.contains('ok')) return;
+      if(v===''){ if(required) missing++; return; }
+      if(v===String(vx.exp[id])){ inp.classList.remove('bad'); inp.classList.add('ok'); }
+      else { inp.classList.add('bad'); wrong++; }
+    });
+    if(wrong===0 && missing===0){ vSolved(); return; }
+    if(wrong>0){
+      vx.errors++;
+      $('#vLive').textContent = 'Hay cajitas rojas. Revísalas e inténtalo otra vez.';
+      if(vx.errors>=2) vSoloHelp();
+    } else {
+      $('#vLive').textContent = 'Te faltan cajitas por llenar.';
+    }
+  }
+
+  function vNew(){
+    vGenerate();
+    $('#vDone').hidden = true; $('#vHint').hidden = true; $('#vLive').textContent = '';
+    $('#vNum').textContent = vlog.length+1;
+    vRender(); vApplyState(); vPrompt(); vUpdateChips(); vNames(); vFocusCur();
+  }
+
+  $('#board').addEventListener('input', function(e){
+    var inp = e.target; if(!inp.classList.contains('vin')) return;
+    var v = inp.value.replace(/\D/g,'').slice(-1);
+    inp.value = v; inp.classList.remove('bad');
+    if(v==='') return;
+    if(V.mode==='guided') vGuidedCheck(inp); else vSoloAdvance(inp);
+  });
+  $('#board').addEventListener('keydown', function(e){
+    if(e.key==='Enter' && V.mode==='solo'){ e.preventDefault(); vSoloCheck(); }
+  });
+  $('#board').addEventListener('focusin', function(e){
+    if(e.target.classList.contains('vin') && !e.target.readOnly) e.target.select();
+  });
+  $('#vCheck').addEventListener('click', vSoloCheck);
+  $('#vHelp').addEventListener('click', function(){
+    if(vx.done) return;
+    if(V.mode==='guided'){ vx.hint = Math.min(2, vx.hint+1); vShowHint(); }
+    else vSoloHelp();
+  });
+  $('#vNew').addEventListener('click', vNew);
+  $('#vNext').addEventListener('click', vNew);
+
+  function syncV(){
+    $$('#tabVert .group').forEach(function(g){
+      var key = g.dataset.vkey;
+      $$('.opt', g).forEach(function(b){ b.setAttribute('aria-pressed', String(V[key])===b.dataset.val ? 'true':'false'); });
+    });
+    $('#vCheck').hidden = V.mode!=='solo';
+  }
+  $$('#tabVert .group .opt').forEach(function(b){
+    b.addEventListener('click', function(){
+      var key = b.closest('.group').dataset.vkey;
+      V[key] = key==='mode' ? b.dataset.val : Number(b.dataset.val);
+      syncV(); vNew();
+    });
+  });
+
+  /* ---------- Terminar sesión de columnas ---------- */
+  $('#vFinish').addEventListener('click', function(){
+    if(!vlog.length){ $('#vLive').textContent = 'Resuelve al menos un ejercicio y luego toca “Ya terminé”.'; return; }
+    var solved = vlog.length;
+    var perfect = vlog.filter(function(e){ return e.errors===0; }).length;
+    var pct = Math.round(perfect/solved*100);
+    $('#score').innerHTML = solved+' <small>ejercicio'+(solved===1?'':'s')+' resuelto'+(solved===1?'':'s')+', '+perfect+' sin errores</small>';
+    var s = stars(pct), html = '';
+    for(var k=0;k<3;k++) html += '<span class="'+(k<s?'on':'off')+'">★</span>';
+    $('#stars').innerHTML = html;
+    $('#resMsg').textContent = pct===100 ? '¡Perfecto! Multiplicas como un campeón.' :
+      pct>=70 ? '¡Muy bien! Casi todo sin errores.' :
+      pct>=40 ? '¡Buen trabajo! Repasa las llevadas y vuelve a practicar.' :
+      'Sigue practicando: cada ejercicio te ayuda a mejorar. Usa el modo paso a paso.';
+    var ul = $('#missed'); ul.innerHTML = '';
+    var withErr = vlog.filter(function(e){ return e.errors>0; });
+    withErr.forEach(function(e){
+      var li = document.createElement('li');
+      li.textContent = e.a+' × '+e.m+' = '+e.answer+' ('+e.errors+' error'+(e.errors===1?'':'es')+')';
+      ul.appendChild(li);
+    });
+    $('#missedBox').hidden = withErr.length===0;
+    rep = {
+      source:'vert',
+      practice:'Multiplicación en columnas (multiplicando de '+V.n+' cifras, multiplicador de '+V.q+' cifra'+(V.q===1?'':'s')+' con cifras del 2 al '+V.maxM+', '+(V.carries?'con llevadas':'sin llevadas')+', '+(V.mode==='guided'?'paso a paso':'yo solo')+')',
+      result: solved+' ejercicio'+(solved===1?'':'s')+' resuelto'+(solved===1?'':'s')+', '+perfect+' sin errores ('+pct+'%)',
+      lines: vlog.map(function(e,i){
+        return (i+1)+'. '+e.a+' × '+e.m+' = '+e.answer+(e.errors===0 ? '  ✔ (sin errores)' : '  ✔ ('+e.errors+' error'+(e.errors===1?'':'es')+' en el camino)');
+      })
+    };
+    $('#approved').checked = false;
+    $('#approver').value = '';
+    $('#sendMsg').textContent = '';
+    var sec = $('#results'); sec.hidden = false;
+    updateSend();
+    sec.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto':'smooth', block:'start'});
+    if(pct>=90) confetti();
+  });
+
+  /* ---------- Inicio ---------- */
+  try{ var saved = localStorage.getItem('nl_name'); if(saved) $('#stuName').value = saved; }catch(e){}
+  syncSettingsUI();
+  generate();
+  syncV();
+  vNew();
+})();
+</script>
+</body>
+</html>
