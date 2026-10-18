@@ -582,9 +582,20 @@ details[open] summary{border-bottom:3px solid var(--line)}
               <li>Escribe la <b>última cifra</b> del resultado debajo de la raya.</li>
               <li>Si el resultado tiene dos cifras, la primera la <b>llevas</b>: escríbela arriba de la siguiente columna.</li>
               <li>En la siguiente columna multiplica y <b>suma lo que llevas</b>.</li>
-              <li>Al final, <b>baja</b> lo que te quedó llevando.</li>
+              <li>En la <b>última columna</b>, escribe <b>todo</b> el resultado (las dos cifras) a la izquierda.</li>
               <li>Si el multiplicador tiene más cifras, haz una fila (<b>producto parcial</b>) por cada una, corriéndola un lugar a la izquierda, y después <b>suma</b> las filas.</li>
             </ol>
+          </div>
+        </details>
+        <details>
+          <summary>🔎 Ejemplo: 96 × 8</summary>
+          <div class="dbody">
+            <ul>
+              <li>Unidades: 8 × 6 = 48. Escribo el 8 abajo y me llevo el 4 arriba.</li>
+              <li>Decenas: 8 × 9 = 72, más el 4 que llevaba: 72 + 4 = 76. Es la última columna: escribo el 76 completo, a la izquierda del 8.</li>
+              <li>Resultado: <span class="ex-demo">768</span> ✔</li>
+              <li>Ayuda: multiplicar por 8 es hacer 8 veces el número, o doblar tres veces (× 2, × 2, × 2).</li>
+            </ul>
           </div>
         </details>
         <details>
@@ -593,9 +604,21 @@ details[open] summary{border-bottom:3px solid var(--line)}
             <ul>
               <li>Unidades: 2 × 3 = 6. Escribo 6.</li>
               <li>Decenas: 5 × 3 = 15. Escribo 5 y llevo 1 arriba del 3.</li>
-              <li>Centenas: 3 × 3 = 9, más 1 que llevo = 10. Escribo 0 y llevo 1.</li>
-              <li>Ya no hay más números: bajo el 1.</li>
+              <li>Centenas: 3 × 3 = 9, más 1 que llevo: 9 + 1 = 10. Es la última columna: escribo el 10 completo, a la izquierda del 5.</li>
               <li>Resultado: <span class="ex-demo">1056</span> ✔</li>
+            </ul>
+          </div>
+        </details>
+        <details>
+          <summary>💡 Trucos para multiplicar</summary>
+          <div class="dbody">
+            <ul>
+              <li>× 2: el doble.</li>
+              <li>× 4: el doble del doble.</li>
+              <li>× 8: doblar tres veces (× 2, × 2, × 2).</li>
+              <li>× 5: la mitad de × 10.</li>
+              <li>× 9: multiplica por 10 y resta el número. 9 × 7 = 70 − 7 = 63.</li>
+              <li>× 3: el doble más el número.</li>
             </ul>
           </div>
         </details>
@@ -730,7 +753,7 @@ details[open] summary{border-bottom:3px solid var(--line)}
             <ol>
               <li>Toma las primeras cifras del dividendo hasta que el número sea <b>igual o mayor</b> que el divisor.</li>
               <li>¿Cuántas veces <b>cabe</b> el divisor? Escribe esa cifra en el <b>cociente</b>.</li>
-              <li><b>Multiplica</b> esa cifra por el divisor: es el producto.</li>
+              <li><b>Multiplica</b> esa cifra por el divisor, de derecha a izquierda: escribe la última cifra y llévate la otra arriba. En la última columna escribe todo el resultado. Es el producto.</li>
               <li><b>Resta</b>: el número menos el producto. Es el residuo parcial.</li>
               <li><b>Baja</b> la siguiente cifra del dividendo, junto al residuo.</li>
               <li>Repite hasta que no queden cifras por bajar. Lo último que queda es el <b>residuo</b>.</li>
@@ -1273,7 +1296,8 @@ details[open] summary{border-bottom:3px solid var(--line)}
       if(carry>0) add.push({terms:[], carryIn:carry, sum:carry, digit:carry, carryOut:0, virtual:true});
       R = add.length;
     }
-    return { a:a, b:b, n:n, q:q, rows:rows, add:add, R:R, answer:Number(a.join(''))*Number(b.join('')) };
+    return { a:a, b:b, n:n, q:q, rows:rows, add:add, R:R, answer:Number(a.join(''))*Number(b.join('')),
+             addLast: add ? (add[add.length-1].virtual ? add.length-2 : add.length-1) : -1 };
   }
   function vHasCarry(md){
     return md.rows.some(function(cols){ return cols.some(function(x){ return x.carryOut>0; }); });
@@ -1295,21 +1319,31 @@ details[open] summary{border-bottom:3px solid var(--line)}
       a = []; for(i=0;i<n;i++) a.push(i===0 ? 1 : rnd(0,1));
       md = vBuild(a,b);
     }
-    var steps = [], exp = {}, j;
+    var steps = [], exp = {};
+    // Método de la escuela: de derecha a izquierda; en la ÚLTIMA columna se escribe todo el resultado
     md.rows.forEach(function(cols, j){
       cols.forEach(function(x,k){
-        steps.push({t:'p', j:j, k:k, col:k+j, id:'p-'+j+'-'+k});
         exp['p-'+j+'-'+k] = x.digit;
         if(k>=1 && k<n) exp['pc-'+j+'-'+k] = x.carryIn;
-        if(!x.virtual && x.carryOut>0 && k<n-1) steps.push({t:'pc', j:j, k:k+1, col:k+1+j, id:'pc-'+j+'-'+(k+1)});
+      });
+      cols.forEach(function(x,k){
+        if(x.virtual) return;
+        if(k===n-1 && cols[n]) steps.push({t:'p', j:j, k:n, col:n+j, id:'p-'+j+'-'+n, lead:true});
+        steps.push({t:'p', j:j, k:k, col:k+j, id:'p-'+j+'-'+k, last:(k===n-1)});
+        if(k<n-1 && x.carryOut>0) steps.push({t:'pc', j:j, k:k+1, col:k+1+j, id:'pc-'+j+'-'+(k+1)});
       });
     });
     if(md.add){
+      var L = md.addLast;
       md.add.forEach(function(x,c){
-        steps.push({t:'s', c:c, col:c, id:'s-'+c});
         exp['s-'+c] = x.digit;
-        if(c>=1) exp['sc-'+c] = x.carryIn;
-        if(!x.virtual && x.carryOut>0 && c<md.R-1) steps.push({t:'sc', c:c+1, col:c+1, id:'sc-'+(c+1)});
+        if(c>=1 && c<=L) exp['sc-'+c] = x.carryIn;
+      });
+      md.add.forEach(function(x,c){
+        if(x.virtual) return;
+        if(c===L && md.add[L+1]) steps.push({t:'s', c:L+1, col:L+1, id:'s-'+(L+1), lead:true});
+        steps.push({t:'s', c:c, col:c, id:'s-'+c, last:(c===L)});
+        if(c<L && x.carryOut>0) steps.push({t:'sc', c:c+1, col:c+1, id:'sc-'+(c+1)});
       });
     }
     md.steps = steps; md.exp = exp; md.cur = 0; md.errors = 0; md.done = false; md.hint = 0;
@@ -1365,7 +1399,7 @@ details[open] summary{border-bottom:3px solid var(--line)}
     // suma de productos parciales
     if(q>1){
       h += '<div class="vsign" style="grid-column:1;grid-row:'+rowAC+'">+</div>';
-      for(c=1;c<R;c++){
+      for(c=1;c<=vx.addLast;c++){
         if(solo || vx.add[c].carryIn>0) h += inp('sc-'+c, 'car', c, rowAC, 'Lo que llevas en la suma, columna de las '+PLACES[c]);
       }
       h += '<div class="vline" style="grid-column:1/-1;grid-row:'+rowL2+'"></div>';
@@ -1406,32 +1440,36 @@ details[open] summary{border-bottom:3px solid var(--line)}
   function vPrompt(){
     var el = $('#vPrompt');
     if(V.mode==='solo'){
-      el.innerHTML = 'Escribe el <b>producto</b> empezando por la <b>derecha</b>. Las cajitas de arriba son para lo que llevas.'+
+      el.innerHTML = 'Escribe el <b>producto</b> empezando por la <b>derecha</b>. Las cajitas de arriba son para lo que llevas. En la última columna escribe <b>todo</b> el resultado.'+
         (vx.q>1 ? ' Haz una fila (<b>producto parcial</b>) por cada cifra del multiplicador y luego suma.' : '');
       return;
     }
     var s = vCurStep();
     if(!s){ el.innerHTML = '¡Lo lograste! 🎉'; return; }
-    var t = '', intro = '', x;
+    var t = '', intro = '', x, chip, n = vx.n;
     if(s.t==='p'){
-      x = vx.rows[s.j][s.k];
-      var bj = vBDigit(s.j);
+      var cols = vx.rows[s.j], bj = vBDigit(s.j);
+      x = s.lead ? cols[n-1] : cols[s.k];
+      chip = '<span class="calc">'+bj+' × '+x.d+(x.carryIn ? ' + '+x.carryIn : '')+' = ?</span>';
       if(s.k===0 && vx.q>1){
         intro = s.j===0 ? 'Empieza por la cifra de las <b>unidades</b> del <b>multiplicador</b> (el '+bj+').' :
           'Nueva fila: multiplica el <b>multiplicando</b> por la cifra de las <b>'+PLACES[s.j]+'</b> del <b>multiplicador</b> (el '+bj+'). Los ceros grises ya están puestos: la fila se corre un lugar.';
       }
-      if(x.virtual) t = 'Ya no quedan más cifras en el multiplicando. <b>Baja</b> lo que llevas ⬇️.';
-      else t = '<span class="calc">'+x.d+' × '+bj+(x.carryIn ? ' + '+x.carryIn : '')+' = ?</span>'+
-               '<span>Columna de las <b>'+PLACES[s.k]+'</b> del multiplicando. Escribe abajo la <b>última cifra</b> del resultado. Si tiene dos cifras, la primera la llevas.</span>';
+      if(s.lead) t = chip+'<span>Es la última columna ('+PLACES[n-1]+'): escribe <b>todo</b> el resultado a la izquierda, empezando por la cifra de la <b>izquierda</b>.</span>';
+      else if(s.last) t = chip+'<span>'+(cols[n] ? 'Ahora escribe la cifra de la <b>derecha</b> del resultado.' : 'Es la última columna ('+PLACES[n-1]+'): escribe el resultado.')+'</span>';
+      else t = chip+'<span>Multiplica las <b>'+PLACES[s.k]+'</b> del multiplicando. Escribe abajo la <b>última cifra</b> y llévate la otra <b>arriba</b>.</span>';
     } else if(s.t==='pc'){
       t = '¡Bien! Ahora escribe arriba, sobre la columna de las <b>'+PLACES[s.k]+'</b>, la cifra que <b>llevas</b> ⬆️.';
     } else if(s.t==='s'){
-      x = vx.add[s.c];
+      var L = vx.addLast;
+      x = vx.add[s.lead ? L : s.c];
       if(s.c===0) intro = '¡Ahora suma los <b>productos parciales</b>, columna por columna!';
       var terms = vSumTerms(x);
-      if(x.virtual) t = 'Ya no quedan más números. <b>Baja</b> lo que llevas ⬇️.';
+      chip = '<span class="calc">'+terms.join(' + ')+' = ?</span>';
+      if(s.lead) t = chip+'<span>Es la última columna: escribe <b>todo</b> el resultado a la izquierda, empezando por la cifra de la <b>izquierda</b>.</span>';
       else if(terms.length===1) t = 'En la columna de las <b>'+PLACES[s.c]+'</b> solo hay un número: ¡<b>bájalo</b>! ⬇️';
-      else t = '<span class="calc">'+terms.join(' + ')+' = ?</span><span>Suma la columna de las <b>'+PLACES[s.c]+'</b>. Escribe abajo la <b>última cifra</b>; si da dos cifras, la primera la llevas.</span>';
+      else if(s.last) t = chip+'<span>'+(vx.add[L+1] ? 'Ahora escribe la cifra de la <b>derecha</b> del resultado.' : 'Es la última columna: escribe el resultado.')+'</span>';
+      else t = chip+'<span>Suma la columna de las <b>'+PLACES[s.c]+'</b>. Escribe abajo la <b>última cifra</b>; si da dos cifras, llévate la primera <b>arriba</b>.</span>';
     } else {
       t = '¡Bien! Escribe arriba (en la fila de la suma), sobre la columna de las <b>'+PLACES[s.c]+'</b>, lo que <b>llevas</b> ⬆️.';
     }
@@ -1439,14 +1477,17 @@ details[open] summary{border-bottom:3px solid var(--line)}
   }
 
   function vHintText(s, level){
-    var x, bj, base, l1, p;
+    var x, bj, base, l1, p, terms;
     if(s.t==='p'){
-      x = vx.rows[s.j][s.k]; bj = vBDigit(s.j);
-      if(x.virtual) return level<2 ? 'Mira el número que llevaste en la última columna. ¡Ese número baja!' : 'Escribe el '+x.digit+'.';
+      var cols = vx.rows[s.j], nn = vx.n;
+      bj = vBDigit(s.j);
+      x = s.lead ? cols[nn-1] : cols[s.k];
       base = x.d*bj;
-      l1 = x.d+' × '+bj+' = '+base + (x.carryIn ? ', y '+base+' + '+x.carryIn+' (lo que llevas) = '+x.prod : '');
+      l1 = bj+' × '+x.d+' = '+base + (x.carryIn ? ', y '+base+' + '+x.carryIn+' (lo que llevas) = '+x.prod : '');
+      if(s.lead) return level<2 ? l1+'.' : l1+'. Escribe '+x.prod+': primero el '+x.carryOut+' y luego el '+x.digit+'.';
+      if(s.last) return level<2 ? (cols[nn] ? 'Ahora la cifra de la derecha. ' : '')+l1+'.' : 'Escribe el '+x.digit+'.';
       if(level<2) return l1+'.';
-      return l1+'. De '+x.prod+' escribe la última cifra ('+x.digit+')'+(x.carryOut ? ' y lleva '+x.carryOut+' a la siguiente columna' : '')+'.';
+      return l1+'. De '+x.prod+' escribe la última cifra ('+x.digit+')'+(x.carryOut ? ' y llévate el '+x.carryOut+' arriba' : '')+'.';
     }
     if(s.t==='pc'){
       p = vx.rows[s.j][s.k-1];
@@ -1454,13 +1495,13 @@ details[open] summary{border-bottom:3px solid var(--line)}
       return 'Lleva el '+vx.rows[s.j][s.k].carryIn+'.';
     }
     if(s.t==='s'){
-      x = vx.add[s.c];
-      if(x.virtual) return level<2 ? 'Mira lo que llevaste en la última suma. ¡Ese número baja!' : 'Escribe el '+x.digit+'.';
-      var terms = vSumTerms(x);
-      if(terms.length===1) return 'Solo hay un número en esta columna: ¡bájalo!';
+      x = vx.add[s.lead ? vx.addLast : s.c];
+      terms = vSumTerms(x);
+      if(terms.length===1 && !s.lead) return 'Solo hay un número en esta columna: ¡bájalo!';
       l1 = terms.join(' + ')+' = '+x.sum;
-      if(level<2) return l1+'.';
-      return l1+'. De '+x.sum+' escribe la última cifra ('+x.digit+')'+(x.carryOut ? ' y lleva '+x.carryOut : '')+'.';
+      if(s.lead) return level<2 ? l1+'.' : l1+'. Escribe '+x.sum+': primero el '+x.carryOut+' y luego el '+x.digit+'.';
+      if(s.last) return level<2 ? l1+'.' : 'Escribe el '+x.digit+'.';
+      return level<2 ? l1+'.' : l1+'. De '+x.sum+' escribe la última cifra ('+x.digit+')'+(x.carryOut ? ' y llévate el '+x.carryOut+' arriba' : '')+'.';
     }
     p = vx.add[s.c-1];
     if(level<2) return 'Antes salió '+p.sum+'. Lo que llevas es la primera cifra.';
@@ -1654,7 +1695,15 @@ details[open] summary{border-bottom:3px solid var(--line)}
   function dGcd(a,b){ return b===0 ? a : dGcd(b, a%b); }
   function dStep(w, dsr, wlen){
     var q = Math.floor(w/dsr), p = q*dsr, r = w-p;
-    return { w:w, q:q, p:p, r:r, pstr:String(p), rstr:String(r), wlen:wlen };
+    var ds = String(dsr).split('').map(Number).reverse(), pcols = [], carry = 0, k;
+    if(q>0){
+      for(k=0;k<ds.length;k++){
+        var pr = ds[k]*q + carry;
+        pcols.push({ d:ds[k], carryIn:carry, prod:pr, digit:pr%10, carryOut:Math.floor(pr/10) });
+        carry = Math.floor(pr/10);
+      }
+    }
+    return { w:w, q:q, p:p, r:r, pstr:String(p), rstr:String(r), wlen:wlen, pcols:pcols };
   }
   // withDec: si sobra algo, sigue bajando ceros hasta que el residuo sea 0
   function dModel(D, dsr, withDec){
@@ -1725,8 +1774,20 @@ details[open] summary{border-bottom:3px solid var(--line)}
     var steps = [], exp = {};
     md.qcIndex = -1;
     md.sd.forEach(function(S,i){
+      var len = S.pstr.length, dl = md.dl, c;
       steps.push({t:'q', i:i, id:'q-'+i}); exp['q-'+i] = String(S.q);
-      for(k=0;k<S.pstr.length;k++){ steps.push({t:'p', i:i, k:k, id:'p-'+i+'-'+k}); exp['p-'+i+'-'+k] = S.pstr.charAt(k); }
+      // Producto como en la escuela: de derecha a izquierda, con llevadas; en la última columna se escribe todo
+      if(S.q===0 || dl===1){
+        for(c=len-1;c>=0;c--) steps.push({t:'p', i:i, c:c, id:'p-'+i+'-'+c});
+      } else {
+        for(c=0;c<dl-1;c++){
+          steps.push({t:'p', i:i, c:c, id:'p-'+i+'-'+c});
+          if(S.pcols[c].carryOut>0) steps.push({t:'pc', i:i, c:c+1, id:'pc-'+i+'-'+(c+1)});
+        }
+        for(c=len-1;c>=dl-1;c--) steps.push({t:'p', i:i, c:c, id:'p-'+i+'-'+c});
+      }
+      for(c=0;c<len;c++) exp['p-'+i+'-'+c] = S.pstr.charAt(len-1-c);
+      for(c=1;c<dl;c++) exp['pc-'+i+'-'+c] = S.q>0 ? String(S.pcols[c].carryIn) : '0';
       for(k=0;k<S.rstr.length;k++){ steps.push({t:'r', i:i, k:k, id:'r-'+i+'-'+k}); exp['r-'+i+'-'+k] = S.rstr.charAt(k); }
       if(i<md.M-1){
         if(i===md.m-1 && md.K>0){ md.qcIndex = steps.length; steps.push({t:'qc', id:'qc'}); exp['qc'] = DV.sep; }
@@ -1747,8 +1808,11 @@ details[open] summary{border-bottom:3px solid var(--line)}
 
   function dRender(){
     var b = $('#dboard'), n = dx.n, t = dx.t, m = dx.m, M = dx.M, K = dx.K, nC = n+K, h = '', i, k, c;
+    var hasC = dx.dl>1, base = hasC ? 3 : 2;
     var lc = function(c){ return c+2; };
-    var rowP = function(i){ return 2+2*i; }, rowR = function(i){ return 3+2*i; };
+    var rowC = function(i){ return 2+base*i; };
+    var rowP = function(i){ return (hasC ? 3 : 2)+base*i; };
+    var rowR = function(i){ return rowP(i)+1; };
     var rightCols = Math.max(dx.dl, m + (K>0 ? 1+K : 0));
     b.style.setProperty('--cols', nC+1+rightCols);
     b.style.gridTemplateColumns = 'var(--sign) repeat('+nC+', var(--cell)) calc(var(--cell)*.35) max-content';
@@ -1766,20 +1830,26 @@ details[open] summary{border-bottom:3px solid var(--line)}
     h += '<div class="dvrow" style="grid-column:'+(nC+3)+';grid-row:1">';
     for(k=0;k<dx.dl;k++) h += '<div class="vd pc0">'+dx.dvs[k]+'</div>';
     h += '</div>';
-    // cociente
-    h += '<div class="dqrow" style="grid-column:'+(nC+3)+';grid-row:3">';
+    h += '<div class="dqrow" style="grid-column:'+(nC+3)+';grid-row:'+rowR(0)+'">';
     for(i=0;i<M;i++){
       if(i===m && K>0) h += inpFlex('qc', 'res quo comma', 'Separador decimal del cociente', 'decimal');
       h += inpFlex('q-'+i, 'res quo', (i<m ? 'Cifra '+(i+1)+' del cociente' : 'Decimal '+(i-m+1)+' del cociente'));
     }
     h += '</div>';
     for(i=0;i<M;i++){
-      var S = dx.sd[i], e = t-1+i;
-      h += '<div class="vsign" style="grid-column:1;grid-row:'+rowP(i)+';font-size:calc(var(--cell)*.4)" aria-hidden="true">−</div>';
-      for(k=0;k<S.pstr.length;k++){
-        h += inp('p-'+i+'-'+k, 'prod', lc(e-S.pstr.length+1+k), rowP(i), 'Producto, cifra '+(k+1)+', paso '+(i+1));
+      var S = dx.sd[i], e = t-1+i, len = S.pstr.length;
+      if(hasC){
+        for(c=1;c<dx.dl;c++){
+          if(DV.mode==='solo' || (S.q>0 && S.pcols[c-1].carryOut>0)){
+            h += inp('pc-'+i+'-'+c, 'car', lc(e-c), rowC(i), 'Lo que llevas al multiplicar, paso '+(i+1));
+          }
+        }
       }
-      var wl = Math.max(S.wlen, S.pstr.length);
+      h += '<div class="vsign" style="grid-column:1;grid-row:'+rowP(i)+';font-size:calc(var(--cell)*.4)" aria-hidden="true">−</div>';
+      for(c=0;c<len;c++){
+        h += inp('p-'+i+'-'+c, 'prod', lc(e-c), rowP(i), 'Producto, columna '+(c+1)+' desde la derecha, paso '+(i+1));
+      }
+      var wl = Math.max(S.wlen, len);
       h += '<div class="dsub" style="grid-column:'+lc(e-wl+1)+'/'+(lc(e)+1)+';grid-row:'+rowP(i)+'"></div>';
       for(k=0;k<S.rstr.length;k++){
         h += inp('r-'+i+'-'+k, 'res'+(i===M-1?' fin':''), lc(e-S.rstr.length+1+k), rowR(i), (i===M-1?'Residuo final':'Residuo')+', cifra '+(k+1)+', paso '+(i+1));
@@ -1791,7 +1861,7 @@ details[open] summary{border-bottom:3px solid var(--line)}
 
   function dCur(){ return DV.mode==='guided' && !dx.done ? dx.steps[dx.cur] : null; }
   function dOrder(){
-    return DV.mode==='guided' ? dx.steps : dx.steps.filter(function(s){ return s.t!=='p'; });
+    return DV.mode==='guided' ? dx.steps : dx.steps.filter(function(s){ return s.t!=='p' && s.t!=='pc'; });
   }
   function dApply(){
     var cur = dCur(), guided = DV.mode==='guided';
@@ -1825,7 +1895,7 @@ details[open] summary{border-bottom:3px solid var(--line)}
   function dPrompt(){
     var el = $('#dPrompt');
     if(DV.mode==='solo'){
-      el.innerHTML = 'Divide de izquierda a derecha: escribe la cifra del <b>cociente</b>, multiplica y resta para hallar el <b>residuo</b>, y baja la siguiente cifra del <b>dividendo</b>. Las cajitas punteadas son para el producto.'+
+      el.innerHTML = 'Divide de izquierda a derecha: escribe la cifra del <b>cociente</b>, multiplica y resta para hallar el <b>residuo</b>, y baja la siguiente cifra del <b>dividendo</b>. Las cajitas punteadas son para el producto y lo que llevas.'+
         (dx.K>0 ? ' Si al final sobra algo, pon el <b>separador decimal</b> en el cociente y baja ceros hasta que el residuo sea 0.' : '');
       return;
     }
@@ -1842,8 +1912,26 @@ details[open] summary{border-bottom:3px solid var(--line)}
           'Toma las primeras cifras del <b>dividendo</b> hasta formar un número igual o mayor que el <b>divisor</b>: <b>'+S.w+'</b>.' :
           'Ahora trabajas con <b>'+S.w+'</b>: el residuo anterior y la cifra que bajaste.';
         t = '<span class="calc">'+S.w+' ÷ '+dsr+' = ?</span><span>¿Cuántas veces cabe el <b>divisor</b> ('+dsr+') en '+S.w+'? Escribe esa cifra en el <b>cociente</b>'+(s.i>=dx.m ? ', después del separador decimal.' : ', debajo del divisor.')+(s.i>0 ? ' Si no cabe, escribe 0.' : '')+'</span>';
-      } else if(s.t==='p'){
-        t = '<span class="calc">'+S.q+' × '+dsr+' = ?</span><span>Multiplica la cifra del cociente por el divisor. Escribe el <b>producto</b> en las cajitas punteadas, de izquierda a derecha.</span>';
+      } else if(s.t==='p' || s.t==='pc'){
+        var dl = dx.dl, len = S.pstr.length, c = s.c, col, chip;
+        if(s.t==='pc'){
+          t = '¡Bien! Escribe arriba, sobre la columna de las <b>'+PLACES[c]+'</b> del divisor, lo que <b>llevas</b> ⬆️.';
+        } else if(S.q===0){
+          t = '<span class="calc">0 × '+dsr+' = ?</span><span>Cualquier número multiplicado por 0 da 0. Escribe el <b>producto</b>.</span>';
+        } else if(dl===1){
+          t = '<span class="calc">'+S.q+' × '+dsr+' = ?</span><span>Multiplica la cifra del cociente por el divisor. Escribe el <b>producto</b> completo, de izquierda a derecha.</span>';
+        } else {
+          col = S.pcols[Math.min(c, dl-1)];
+          chip = '<span class="calc">'+S.q+' × '+col.d+(col.carryIn ? ' + '+col.carryIn : '')+' = ?</span>';
+          if(c<dl-1){
+            if(c===0) intro = 'Ahora <b>multiplica</b> la cifra del cociente por el divisor, empezando por la derecha (como en la multiplicación).';
+            t = chip+'<span>Multiplica las <b>'+PLACES[c]+'</b> del divisor ('+col.d+') por '+S.q+'. Escribe abajo la <b>última cifra</b> y llévate la otra <b>arriba</b>.</span>';
+          } else if(len>dl && c===len-1){
+            t = chip+'<span>Última columna del divisor ('+PLACES[dl-1]+'): escribe <b>todo</b> el resultado a la izquierda, empezando por la cifra de la <b>izquierda</b>.</span>';
+          } else {
+            t = chip+'<span>'+(len>dl ? 'Ahora escribe la cifra de la <b>derecha</b> del resultado.' : 'Última columna del divisor ('+PLACES[dl-1]+'): escribe el resultado.')+'</span>';
+          }
+        }
       } else if(s.t==='r'){
         t = '<span class="calc">'+S.w+' − '+S.p+' = ?</span><span>Resta el producto al número con el que trabajas. Escribe el <b>residuo</b> debajo de la raya, de izquierda a derecha.'+(s.i===dx.M-1 ? ' Es el residuo final.' : '')+'</span>';
       } else if(s.i>=dx.m-1){
@@ -1867,9 +1955,22 @@ details[open] summary{border-bottom:3px solid var(--line)}
       return S.q===0 ? dsr+' es mayor que '+S.w+', no cabe ni una vez: escribe 0.' :
         dsr+' × '+S.q+' = '+S.p+' cabe en '+S.w+', pero '+dsr+' × '+(S.q+1)+' = '+(dsr*(S.q+1))+' ya se pasa.';
     }
+    if(s.t==='pc'){
+      var pv = S.pcols[s.c-1];
+      return level<2 ? 'Antes salió '+pv.prod+'. Lo que llevas es la primera cifra (las decenas).' : 'Lleva el '+pv.carryOut+'.';
+    }
     if(s.t==='p'){
-      if(level<2) return 'Calcula '+S.q+' × '+dsr+'. Si el divisor tiene varias cifras, multiplica cifra por cifra.';
-      return S.q+' × '+dsr+' = '+S.p+'.';
+      var dl = dx.dl, len = S.pstr.length, c = s.c, col, base, l1;
+      if(S.q===0) return 'Cualquier número por 0 da 0.';
+      if(dl===1) return level<2 ? 'Calcula '+S.q+' × '+dsr+'.' : S.q+' × '+dsr+' = '+S.p+'.';
+      col = S.pcols[Math.min(c, dl-1)];
+      base = col.d*S.q;
+      l1 = S.q+' × '+col.d+' = '+base + (col.carryIn ? ', y '+base+' + '+col.carryIn+' (lo que llevas) = '+col.prod : '');
+      if(c<dl-1){
+        return level<2 ? l1+'.' : l1+'. De '+col.prod+' escribe la última cifra ('+col.digit+')'+(col.carryOut ? ' y llévate el '+col.carryOut+' arriba' : '')+'.';
+      }
+      if(len>dl && c===len-1) return level<2 ? l1+'.' : l1+'. Escribe '+col.prod+': primero el '+col.carryOut+' y luego el '+col.digit+'.';
+      return level<2 ? (len>dl ? 'Ahora la cifra de la derecha. ' : '')+l1+'.' : 'Escribe el '+col.digit+'.';
     }
     if(s.t==='r'){
       if(level<2) return 'Resta: '+S.w+' − '+S.p+'. Si restas bien, el resultado es menor que '+dsr+'.';
@@ -1925,7 +2026,7 @@ details[open] summary{border-bottom:3px solid var(--line)}
     $('#dDone').hidden = false;
     $('#dHint').hidden = true;
     $$('#dboard .vin').forEach(function(inp){
-      if(inp.classList.contains('prod') && inp.value==='') return;
+      if((inp.classList.contains('prod') || inp.classList.contains('car')) && inp.value==='') return;
       inp.classList.remove('bad'); inp.classList.add('ok');
     });
     dApply(); dPrompt(); dChips(); dNames();
