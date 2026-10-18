@@ -257,7 +257,7 @@ details[open] summary{border-bottom:3px solid var(--line)}
 .vin.dim{opacity:.55}
 .vin.ok{background:var(--okbg); border-color:var(--ok); border-style:solid}
 .vin.bad{background:var(--badbg); border-color:var(--bad); border-style:solid}
-.vh{margin-top:6px}
+.vh{margin:0 0 10px}
 .vd.ph{background:var(--soft); color:var(--muted); border-style:dashed; box-shadow:none; opacity:.8}
 .vin.fin{border-width:4px}
 .rowchip{
@@ -314,6 +314,21 @@ details[open] summary{border-bottom:3px solid var(--line)}
 .zb{font-size:1rem; padding:5px 14px}
 .zlabel{min-width:7.5em; text-align:center; font-weight:600; font-size:.9rem; color:var(--muted)}
 .board-wrap{-webkit-overflow-scrolling:touch}
+.kpad{
+  position:sticky; bottom:0; z-index:20; margin:14px -20px -18px;
+  padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));
+  background:var(--card); border-top:3px solid var(--line); border-radius:18px 18px 21px 21px;
+}
+.kgrid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; max-width:340px; margin:0 auto}
+.kkey{
+  font:inherit; font-weight:700; font-size:1.5rem; height:clamp(40px,6.2vh,54px);
+  border:3px solid var(--line); border-radius:14px; background:var(--soft); color:var(--ink);
+  box-shadow:0 3px 0 var(--line); cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+}
+.kkey[data-k="del"]{background:var(--sun); color:#2A1F5C}
+.kkey:active:not(:disabled){transform:translateY(3px); box-shadow:0 0 0 var(--line)}
+.kkey:disabled{opacity:.4; cursor:default}
+body.kb-on .vin{scroll-margin-bottom:280px}
 @media (max-width:560px){
   body{font-size:17px}
   .meta{margin-left:0; width:100%}
@@ -535,14 +550,15 @@ details[open] summary{border-bottom:3px solid var(--line)}
         </div>
         <div class="names" id="vNames"></div>
         <div class="prompt" id="vPrompt" role="status" aria-live="polite"></div>
+        <div class="hint vh" id="vHint" hidden></div>
         <div class="zoombar" data-zoom="vert" role="group" aria-label="Tamaño del tablero">
           <button type="button" class="mini zb" data-act="out" aria-label="Hacer el tablero más pequeño">🔍−</button>
           <span class="zlabel" aria-live="polite">Ajustado</span>
           <button type="button" class="mini zb" data-act="in" aria-label="Hacer el tablero más grande">🔍+</button>
           <button type="button" class="mini zb" data-act="fit">↔️ Ajustar</button>
+          <button type="button" class="mini zb" data-act="kb" aria-pressed="true">⌨️ Teclado: pantalla</button>
         </div>
         <div class="board-wrap"><div class="board" id="board"></div></div>
-        <div class="hint vh" id="vHint" hidden></div>
         <div class="notice done" id="vDone" hidden>
           <div class="stars" id="vStars" aria-hidden="true"></div>
           <p class="msg" id="vDoneMsg"></p>
@@ -555,6 +571,7 @@ details[open] summary{border-bottom:3px solid var(--line)}
           <button class="btn mint" id="vFinish">🏁 ¡Ya terminé!</button>
         </div>
         <p class="live" id="vLive" role="status" aria-live="polite"></p>
+        <div class="kpad" id="vKpad" hidden></div>
       </section>
 
       <aside class="panel help" aria-labelledby="vHelpTitle" style="margin-bottom:0">
@@ -709,14 +726,15 @@ details[open] summary{border-bottom:3px solid var(--line)}
         </div>
         <div class="names" id="dNames"></div>
         <div class="prompt" id="dPrompt" role="status" aria-live="polite"></div>
+        <div class="hint vh" id="dHint" hidden></div>
         <div class="zoombar" data-zoom="div" role="group" aria-label="Tamaño del tablero">
           <button type="button" class="mini zb" data-act="out" aria-label="Hacer el tablero más pequeño">🔍−</button>
           <span class="zlabel" aria-live="polite">Ajustado</span>
           <button type="button" class="mini zb" data-act="in" aria-label="Hacer el tablero más grande">🔍+</button>
           <button type="button" class="mini zb" data-act="fit">↔️ Ajustar</button>
+          <button type="button" class="mini zb" data-act="kb" aria-pressed="true">⌨️ Teclado: pantalla</button>
         </div>
         <div class="board-wrap"><div class="dboard" id="dboard"></div></div>
-        <div class="hint vh" id="dHint" hidden></div>
         <div class="notice done" id="dDone" hidden>
           <div class="stars" id="dStars" aria-hidden="true"></div>
           <p class="msg" id="dDoneMsg"></p>
@@ -729,6 +747,7 @@ details[open] summary{border-bottom:3px solid var(--line)}
           <button class="btn mint" id="dFinish">🏁 ¡Ya terminé!</button>
         </div>
         <p class="live" id="dLive" role="status" aria-live="polite"></p>
+        <div class="kpad" id="dKpad" hidden></div>
       </section>
 
       <aside class="panel help" aria-labelledby="dHelpTitle" style="margin-bottom:0">
@@ -1135,7 +1154,8 @@ details[open] summary{border-bottom:3px solid var(--line)}
   /* ---------- Confeti ---------- */
   function confetti(){
     if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    var c = $('#confetti'), x = c.getContext('2d');
+    var c = $('#confetti'), x = c.getContext && c.getContext('2d');
+    if(!x) return;
     c.width = innerWidth; c.height = innerHeight;
     var cols = ['#FF5D73','#FFC93C','#26C9A8','#38A8FF','#BFA8FF'];
     var ps = [];
@@ -1429,6 +1449,7 @@ details[open] summary{border-bottom:3px solid var(--line)}
     $$('#board .band').forEach(function(band){
       band.classList.toggle('on', !!cur && Number(band.dataset.col)===cur.col);
     });
+    kbSync();
   }
 
   function vSumTerms(x){
@@ -1890,6 +1911,7 @@ details[open] summary{border-bottom:3px solid var(--line)}
       el.classList.toggle('hl', c>=lo && c<=hi);
       if(el.classList.contains('gh')) el.classList.toggle('off', !showGh);
     });
+    kbSync();
   }
 
   function dPrompt(){
@@ -2209,6 +2231,7 @@ details[open] summary{border-bottom:3px solid var(--line)}
     bar.addEventListener('click', function(e){
       var btn = e.target.closest('.zb'); if(!btn) return;
       var st = ZOOM[key], act = btn.dataset.act;
+      if(act==='kb'){ kbToggle(); return; }
       if(act==='fit'){
         st.mode = 'auto';
         try{ localStorage.removeItem('nl_zoom_'+key); }catch(err){}
@@ -2224,6 +2247,108 @@ details[open] summary{border-bottom:3px solid var(--line)}
   window.addEventListener('resize', function(){
     clearTimeout(zTimer);
     zTimer = setTimeout(function(){ zApply('vert'); zApply('div'); }, 120);
+  });
+
+  /* ---------- Teclado numérico propio ---------- */
+  var KB = { on:false, last:null };
+  try{
+    var kbSaved = localStorage.getItem('nl_kb');
+    KB.on = kbSaved===null ? matchMedia('(pointer: coarse)').matches : kbSaved==='1';
+  }catch(e){ KB.on = false; }
+
+  var KCTX = {
+    vert:{
+      board:'#board', pad:'#vKpad',
+      mode:function(){ return V.mode; }, state:function(){ return vx; },
+      order:function(){ return vx ? vx.steps : []; },
+      focus:function(){ vFocusCur(); },
+      commaOK:function(){ return false; }
+    },
+    div:{
+      board:'#dboard', pad:'#dKpad',
+      mode:function(){ return DV.mode; }, state:function(){ return dx; },
+      order:function(){ return dx ? dOrder() : []; },
+      focus:function(){ dFocus(); },
+      commaOK:function(){
+        return !!dx && dx.K>0 && !dx.done &&
+          (DV.mode==='solo' || (!!dx.steps[dx.cur] && dx.steps[dx.cur].id==='qc'));
+      }
+    }
+  };
+
+  function kbSync(){
+    document.body.classList.toggle('kb-on', KB.on);
+    Object.keys(KCTX).forEach(function(k){
+      var c = KCTX[k], pad = $(c.pad), st = c.state();
+      if(!pad) return;
+      pad.hidden = !(KB.on && st && !st.done);
+      var comma = $('.kkey[data-k="comma"]', pad);
+      if(comma){
+        comma.textContent = k==='div' ? DV.sep : ',';
+        comma.disabled = !c.commaOK();
+      }
+      $$(c.board+' .vin').forEach(function(inp){
+        inp.setAttribute('inputmode', KB.on ? 'none' : (inp.dataset.id==='qc' ? 'decimal' : 'numeric'));
+      });
+    });
+    $$('.zb[data-act="kb"]').forEach(function(b){
+      b.textContent = KB.on ? '⌨️ Teclado: pantalla' : '⌨️ Teclado: sistema';
+      b.setAttribute('aria-pressed', KB.on ? 'true' : 'false');
+    });
+  }
+  function kbToggle(){
+    KB.on = !KB.on;
+    try{ localStorage.setItem('nl_kb', KB.on ? '1' : '0'); }catch(e){}
+    kbSync();
+    if(!$('#tabVert').hidden) vFocusCur(); else if(!$('#tabDiv').hidden) dFocus();
+  }
+
+  function kbTarget(c){
+    var board = $(c.board);
+    if(c.mode()==='guided') return $('.vin.now', board);
+    var el = KB.last;
+    return (el && board.contains(el) && !el.readOnly) ? el : null;
+  }
+  function kbPress(key, k){
+    var c = KCTX[key], board = $(c.board), inp = kbTarget(c);
+    if(!inp){ c.focus(); inp = kbTarget(c); }
+    if(!inp) return;
+    if(document.activeElement!==inp) inp.focus({preventScroll:true});
+    if(k==='del'){
+      if(inp.value!==''){
+        inp.value = ''; inp.classList.remove('bad');
+      } else if(c.mode()==='solo'){
+        var ord = c.order(), i, found = -1;
+        for(i=0;i<ord.length;i++){ if(ord[i].id===inp.dataset.id){ found = i; break; } }
+        if(found>0){
+          var pe = $('.vin[data-id="'+ord[found-1].id+'"]', board);
+          if(pe && !pe.readOnly){ pe.value = ''; pe.classList.remove('bad'); pe.focus({preventScroll:true}); }
+        }
+      }
+      return;
+    }
+    inp.value = (k==='comma') ? (key==='div' ? DV.sep : ',') : k;
+    inp.dispatchEvent(new Event('input', {bubbles:true}));
+  }
+  function kbBuild(pad, key){
+    var keys = ['1','2','3','4','5','6','7','8','9','comma','0','del'], h = '';
+    keys.forEach(function(k){
+      var label = k==='del' ? '⌫' : (k==='comma' ? ',' : k);
+      var aria = k==='del' ? ' aria-label="Borrar"' : (k==='comma' ? ' aria-label="Separador decimal"' : '');
+      h += '<button type="button" class="kkey" data-k="'+k+'" tabindex="-1"'+aria+'>'+label+'</button>';
+    });
+    pad.innerHTML = '<div class="kgrid" role="group" aria-label="Teclado numérico">'+h+'</div>';
+    pad.addEventListener('mousedown', function(e){ e.preventDefault(); });
+    pad.addEventListener('click', function(e){
+      var b = e.target.closest('.kkey');
+      if(!b || b.disabled) return;
+      kbPress(key, b.dataset.k);
+    });
+  }
+  kbBuild($('#vKpad'), 'vert');
+  kbBuild($('#dKpad'), 'div');
+  document.addEventListener('focusin', function(e){
+    if(e.target.classList && e.target.classList.contains('vin')) KB.last = e.target;
   });
 
   /* ---------- Inicio ---------- */
