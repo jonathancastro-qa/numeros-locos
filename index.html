@@ -223,7 +223,7 @@ details[open] summary{border-bottom:3px solid var(--line)}
 }
 .board-wrap{overflow-x:auto; padding:8px 2px 16px}
 .board{
-  --cell:clamp(36px, calc((100vw - 120px) / var(--cols,5)), 78px); --sign:clamp(34px,8vw,52px);
+  --cell:calc(clamp(36px, calc((100vw - 120px) / var(--cols,5)), 78px) * var(--z,1)); --sign:calc(clamp(34px,8vw,52px) * var(--z,1));
   position:relative; display:grid; width:max-content; max-width:none; margin:0 auto;
   row-gap:6px; font-weight:700;
 }
@@ -276,6 +276,44 @@ details[open] summary{border-bottom:3px solid var(--line)}
   .board-wrap{margin:0 -6px}
 }
 
+/* ---------- División en columnas ---------- */
+.dboard{
+  --cell:calc(clamp(32px, calc((100vw - 120px) / var(--cols,8)), 68px) * var(--z,1));
+  --sign:calc(clamp(24px,5vw,36px) * var(--z,1));
+  position:relative; display:grid; width:max-content; margin:0 auto;
+  row-gap:4px; font-weight:700;
+}
+.dhouse{
+  z-index:1; margin-left:-2px; pointer-events:none;
+  border-left:5px solid var(--line); border-bottom:5px solid var(--line); border-radius:0 0 0 12px;
+}
+.dsub{z-index:1; align-self:end; height:0; margin-bottom:-3px; border-bottom:4px solid var(--line)}
+.vin.prod{
+  width:84%; height:calc(var(--cell)*.62); font-size:calc(var(--cell)*.38);
+  border-style:dashed; border-color:var(--lilac); background:var(--soft);
+}
+.vin.quo{border-color:var(--mint); border-width:4px}
+.vin.brg:not(.ok):not(.bad){background:var(--band)}
+.vin.prod.now{border-style:solid; border-color:var(--line)}
+.vd.hl{box-shadow:0 0 0 5px var(--sun)}
+.dot{
+  display:inline-block; width:.8em; height:.8em; margin-right:6px; vertical-align:middle;
+  border:2px solid var(--line); border-radius:50%;
+}
+.dot.mint{background:var(--mint)}
+
+.dvrow,.dqrow{display:flex; align-items:center; z-index:1}
+.dvrow{align-self:center}
+.dvrow .vd{width:calc(var(--cell)*.88); margin:0 calc(var(--cell)*.06)}
+.dqrow .vin{width:calc(var(--cell)*.88); height:var(--cell); margin:0 calc(var(--cell)*.06); font-size:calc(var(--cell)*.52)}
+.dqrow .vin.comma{width:calc(var(--cell)*.5); margin:0; font-size:calc(var(--cell)*.45)}
+.vd.gh{background:var(--soft); color:var(--muted); border-style:dashed; box-shadow:none}
+.vd.gh1{font-size:calc(var(--cell)*.4)}
+.vd.gh.off{visibility:hidden}
+.zoombar{display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px; margin:0 0 8px}
+.zb{font-size:1rem; padding:5px 14px}
+.zlabel{min-width:7.5em; text-align:center; font-weight:600; font-size:.9rem; color:var(--muted)}
+.board-wrap{-webkit-overflow-scrolling:touch}
 @media (max-width:560px){
   body{font-size:17px}
   .meta{margin-left:0; width:100%}
@@ -300,6 +338,7 @@ details[open] summary{border-bottom:3px solid var(--line)}
   <nav class="maintabs" aria-label="Secciones">
     <button class="tabbtn" id="tabQuickBtn" aria-pressed="true">⚡ Ejercicios rápidos</button>
     <button class="tabbtn" id="tabVertBtn" aria-pressed="false">🧮 Multiplicación en columnas</button>
+    <button class="tabbtn" id="tabDivBtn" aria-pressed="false">➗ División en columnas</button>
   </nav>
 
   <div id="tabQuick">
@@ -496,6 +535,12 @@ details[open] summary{border-bottom:3px solid var(--line)}
         </div>
         <div class="names" id="vNames"></div>
         <div class="prompt" id="vPrompt" role="status" aria-live="polite"></div>
+        <div class="zoombar" data-zoom="vert" role="group" aria-label="Tamaño del tablero">
+          <button type="button" class="mini zb" data-act="out" aria-label="Hacer el tablero más pequeño">🔍−</button>
+          <span class="zlabel" aria-live="polite">Ajustado</span>
+          <button type="button" class="mini zb" data-act="in" aria-label="Hacer el tablero más grande">🔍+</button>
+          <button type="button" class="mini zb" data-act="fit">↔️ Ajustar</button>
+        </div>
         <div class="board-wrap"><div class="board" id="board"></div></div>
         <div class="hint vh" id="vHint" hidden></div>
         <div class="notice done" id="vDone" hidden>
@@ -571,6 +616,175 @@ details[open] summary{border-bottom:3px solid var(--line)}
             <div class="legend">
               <span class="pc0">U unidades</span><span class="pc1">D decenas</span><span class="pc2">C centenas</span>
               <span class="pc3">UM unidades de mil</span><span class="pc4">DM decenas de mil</span>
+            </div>
+          </div>
+        </details>
+      </aside>
+    </div>
+  </div>
+
+  <!-- División en columnas -->
+  <div id="tabDiv" hidden>
+    <section class="panel" aria-labelledby="dCfgTitle">
+      <h2 id="dCfgTitle">Elige tu reto de división</h2>
+      <p class="lead">Divide como en el cuaderno: de izquierda a derecha, paso por paso.</p>
+      <div class="settings-grid">
+        <div class="group" data-dkey="n">
+          <h3>¿Cuántas cifras tiene el dividendo? <span class="note">Es el número que se reparte.</span></h3>
+          <div class="opts">
+            <button class="opt" data-val="3" aria-pressed="true">3 cifras</button>
+            <button class="opt" data-val="4" aria-pressed="false">4 cifras</button>
+            <button class="opt" data-val="5" aria-pressed="false">5 cifras</button>
+          </div>
+        </div>
+        <div class="group" data-dkey="dl">
+          <h3>¿Cuántas cifras tiene el divisor? <span class="note">Es el número entre el que divides.</span></h3>
+          <div class="opts">
+            <button class="opt" data-val="1" aria-pressed="true">1 cifra</button>
+            <button class="opt" data-val="2" aria-pressed="false">2 cifras</button>
+            <button class="opt" data-val="3" aria-pressed="false">3 cifras</button>
+          </div>
+        </div>
+        <div class="group" data-dkey="rem">
+          <h3>¿Cómo quieres el resultado? <span class="note">Con residuo sobra algo. Con decimales sigues dividiendo hasta que el residuo sea 0.</span></h3>
+          <div class="opts">
+            <button class="opt" data-val="0" aria-pressed="true">Exacta</button>
+            <button class="opt" data-val="1" aria-pressed="false">Con residuo</button>
+            <button class="opt" data-val="2" aria-pressed="false">Con decimales</button>
+          </div>
+        </div>
+        <div class="group" data-dkey="dec">
+          <h3>¿Cuántos decimales como máximo? <span class="note">Solo para “Con decimales”.</span></h3>
+          <div class="opts">
+            <button class="opt" data-val="1" aria-pressed="true">1</button>
+            <button class="opt" data-val="2" aria-pressed="false">2</button>
+            <button class="opt" data-val="3" aria-pressed="false">3</button>
+          </div>
+        </div>
+        <div class="group" data-dkey="sep">
+          <h3>¿Qué separador decimal usas? <span class="note">Puedes escribir coma o punto: se ajusta solo.</span></h3>
+          <div class="opts">
+            <button class="opt" data-val="," aria-pressed="true">Coma ( , )</button>
+            <button class="opt" data-val="." aria-pressed="false">Punto ( . )</button>
+          </div>
+        </div>
+        <div class="group" data-dkey="mode">
+          <h3>¿Cómo quieres hacerlo? <span class="note">Paso a paso te guía casilla por casilla.</span></h3>
+          <div class="opts">
+            <button class="opt" data-val="guided" aria-pressed="true">👣 Paso a paso</button>
+            <button class="opt" data-val="solo" aria-pressed="false">🚀 Yo solo</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="layout">
+      <section class="panel" aria-labelledby="dTitle" style="margin-bottom:0">
+        <div class="sheet-head">
+          <h2 id="dTitle">División <span id="dNum">1</span></h2>
+          <div class="chips" id="dChips"></div>
+        </div>
+        <div class="names" id="dNames"></div>
+        <div class="prompt" id="dPrompt" role="status" aria-live="polite"></div>
+        <div class="zoombar" data-zoom="div" role="group" aria-label="Tamaño del tablero">
+          <button type="button" class="mini zb" data-act="out" aria-label="Hacer el tablero más pequeño">🔍−</button>
+          <span class="zlabel" aria-live="polite">Ajustado</span>
+          <button type="button" class="mini zb" data-act="in" aria-label="Hacer el tablero más grande">🔍+</button>
+          <button type="button" class="mini zb" data-act="fit">↔️ Ajustar</button>
+        </div>
+        <div class="board-wrap"><div class="dboard" id="dboard"></div></div>
+        <div class="hint vh" id="dHint" hidden></div>
+        <div class="notice done" id="dDone" hidden>
+          <div class="stars" id="dStars" aria-hidden="true"></div>
+          <p class="msg" id="dDoneMsg"></p>
+          <button class="btn mint" id="dNext">➡️ Siguiente división</button>
+        </div>
+        <div class="actions">
+          <button class="btn sky" id="dCheck" hidden>🔍 Revisar</button>
+          <button class="btn sun" id="dHelp">💡 Ayuda</button>
+          <button class="btn lilac" id="dNew">🎲 Otra división</button>
+          <button class="btn mint" id="dFinish">🏁 ¡Ya terminé!</button>
+        </div>
+        <p class="live" id="dLive" role="status" aria-live="polite"></p>
+      </section>
+
+      <aside class="panel help" aria-labelledby="dHelpTitle" style="margin-bottom:0">
+        <h2 id="dHelpTitle">🧭 ¿Cómo divido en columnas?</h2>
+        <details open>
+          <summary>📚 Cómo se llaman las partes</summary>
+          <div class="dbody">
+            <ul>
+              <li><b>Dividendo</b>: el número que se reparte (va dentro de la casita).</li>
+              <li><b>Divisor</b>: el número entre el que divides (va a la derecha).</li>
+              <li><b>Cociente</b>: el resultado, debajo del divisor.</li>
+              <li><b>Residuo</b>: lo que sobra al final. Siempre es menor que el divisor.</li>
+              <li><b>Producto</b>: divisor × cifra del cociente.</li>
+              <li><b>Separador decimal</b>: la coma (o el punto) que separa los enteros de los decimales.</li>
+            </ul>
+            <p style="margin:8px 0 0"><b>Ojo:</b> numerador y denominador son las partes de una fracción, no de la división en columnas.</p>
+          </div>
+        </details>
+        <details>
+          <summary>👣 Los pasos</summary>
+          <div class="dbody">
+            <ol>
+              <li>Toma las primeras cifras del dividendo hasta que el número sea <b>igual o mayor</b> que el divisor.</li>
+              <li>¿Cuántas veces <b>cabe</b> el divisor? Escribe esa cifra en el <b>cociente</b>.</li>
+              <li><b>Multiplica</b> esa cifra por el divisor: es el producto.</li>
+              <li><b>Resta</b>: el número menos el producto. Es el residuo parcial.</li>
+              <li><b>Baja</b> la siguiente cifra del dividendo, junto al residuo.</li>
+              <li>Repite hasta que no queden cifras por bajar. Lo último que queda es el <b>residuo</b>.</li>
+              <li>Si sobra algo y quieres seguir, pon el <b>separador decimal</b> en el cociente y baja <b>ceros</b> hasta que el residuo sea 0.</li>
+            </ol>
+          </div>
+        </details>
+        <details>
+          <summary>🔎 Ejemplo: 642 ÷ 2</summary>
+          <div class="dbody">
+            <ul>
+              <li>6 ÷ 2: cabe 3 veces. 3 × 2 = 6. 6 − 6 = 0. Baja el 4: queda 04.</li>
+              <li>4 ÷ 2: cabe 2 veces. 2 × 2 = 4. 4 − 4 = 0. Baja el 2: queda 02.</li>
+              <li>2 ÷ 2: cabe 1 vez. 1 × 2 = 2. 2 − 2 = 0.</li>
+              <li>Cociente: <span class="ex-demo">321</span>. Residuo: <span class="ex-demo">0</span> ✔</li>
+            </ul>
+          </div>
+        </details>
+        <details>
+          <summary>🔎 Ejemplo con divisor de dos cifras: 156 ÷ 12</summary>
+          <div class="dbody">
+            <ul>
+              <li>Con 1 cifra (el 1) no alcanza para 12. Toma 15.</li>
+              <li>15 ÷ 12: cabe 1 vez. 1 × 12 = 12. 15 − 12 = 3. Baja el 6: queda 36.</li>
+              <li>36 ÷ 12: cabe 3 veces. 3 × 12 = 36. 36 − 36 = 0.</li>
+              <li>Cociente: <span class="ex-demo">13</span>. Residuo: <span class="ex-demo">0</span> ✔</li>
+            </ul>
+          </div>
+        </details>
+        <details>
+          <summary>🔎 Cuando sobra algo: 3882 ÷ 5</summary>
+          <div class="dbody">
+            <ul>
+              <li>3882 ÷ 5 = 776 y sobran 2. ¿Se acabó? No: podemos seguir con decimales.</li>
+              <li>Escribe la coma en el cociente (776,) y baja un 0 junto al residuo: queda 20.</li>
+              <li>20 ÷ 5 = 4. Escribe el 4 después de la coma. 4 × 5 = 20. 20 − 20 = 0.</li>
+              <li>Cociente: <span class="ex-demo">776,4</span>. Residuo: <span class="ex-demo">0</span> ✔</li>
+              <li>Comprueba: 776,4 × 5 = 3882 ✔</li>
+            </ul>
+          </div>
+        </details>
+        <details>
+          <summary>✅ Cómo comprobar</summary>
+          <div class="dbody">
+            <p style="margin:0">Cociente × divisor + residuo = dividendo.</p>
+            <p style="margin:6px 0 0">Ejemplo: 17 ÷ 5 = 3 y sobran 2. Comprueba: 3 × 5 + 2 = 17 ✔</p>
+          </div>
+        </details>
+        <details>
+          <summary>🎨 Los colores</summary>
+          <div class="dbody">
+            <div class="legend">
+              <span class="pc3">Dividendo</span><span class="pc0">Divisor</span>
+              <span style="background:var(--mint)">Cociente</span><span style="background:var(--lilac)">Producto</span>
             </div>
           </div>
         </details>
@@ -966,12 +1180,13 @@ details[open] summary{border-bottom:3px solid var(--line)}
   function toTop(){ window.scrollTo({top:0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}); }
   $('#newSet2').addEventListener('click', function(){
     $('#results').hidden = true;
-    if(rep && rep.source==='vert'){ vNew(); } else { generate(); }
+    if(rep && rep.source==='vert'){ vNew(); } else if(rep && rep.source==='div'){ dNew(); } else { generate(); }
     toTop();
   });
   $('#keepPracticing').addEventListener('click', function(){
     $('#results').hidden = true;
     if(rep && rep.source==='vert'){ toTop(); vFocusCur(); return; }
+    if(rep && rep.source==='div'){ toTop(); dFocus(); return; }
     finished = false;
     items.forEach(function(it,i){ if(it.status==='skip') it.status=''; updateCard(i); });
     var first = items.findIndex(function(x){return x.status!=='ok';});
@@ -1009,16 +1224,18 @@ details[open] summary{border-bottom:3px solid var(--line)}
 
   /* ---------- Pestañas ---------- */
   function showTab(which){
-    var q = which==='quick';
-    $('#tabQuick').hidden = !q;
-    $('#tabVert').hidden = q;
-    $('#tabQuickBtn').setAttribute('aria-pressed', q ? 'true':'false');
-    $('#tabVertBtn').setAttribute('aria-pressed', q ? 'false':'true');
+    var panes = { quick:'#tabQuick', vert:'#tabVert', div:'#tabDiv' };
+    var btns = { quick:'#tabQuickBtn', vert:'#tabVertBtn', div:'#tabDivBtn' };
+    Object.keys(panes).forEach(function(k){
+      $(panes[k]).hidden = (k!==which);
+      $(btns[k]).setAttribute('aria-pressed', k===which ? 'true':'false');
+    });
     $('#results').hidden = true;
-    if(!q) vFocusCur();
+    if(which==='vert'){ zApply('vert'); vFocusCur(); } else if(which==='div'){ zApply('div'); dFocus(); }
   }
   $('#tabQuickBtn').addEventListener('click', function(){ showTab('quick'); });
   $('#tabVertBtn').addEventListener('click', function(){ showTab('vert'); });
+  $('#tabDivBtn').addEventListener('click', function(){ showTab('div'); });
 
   /* ---------- Multiplicación en columnas ---------- */
   var V = { n:3, q:1, maxM:9, carries:1, mode:'guided' };
@@ -1351,7 +1568,7 @@ details[open] summary{border-bottom:3px solid var(--line)}
     vGenerate();
     $('#vDone').hidden = true; $('#vHint').hidden = true; $('#vLive').textContent = '';
     $('#vNum').textContent = vlog.length+1;
-    vRender(); vApplyState(); vPrompt(); vUpdateChips(); vNames(); vFocusCur();
+    vRender(); zApply('vert'); vApplyState(); vPrompt(); vUpdateChips(); vNames(); vFocusCur();
   }
 
   $('#board').addEventListener('input', function(e){
@@ -1430,12 +1647,492 @@ details[open] summary{border-bottom:3px solid var(--line)}
     if(pct>=90) confetti();
   });
 
+  /* ---------- División en columnas ---------- */
+  var DV = { n:3, dl:1, rem:0, dec:1, sep:',', mode:'guided' };
+  var dx = null, dlog = [];
+
+  function dGcd(a,b){ return b===0 ? a : dGcd(b, a%b); }
+  function dStep(w, dsr, wlen){
+    var q = Math.floor(w/dsr), p = q*dsr, r = w-p;
+    return { w:w, q:q, p:p, r:r, pstr:String(p), rstr:String(r), wlen:wlen };
+  }
+  // withDec: si sobra algo, sigue bajando ceros hasta que el residuo sea 0
+  function dModel(D, dsr, withDec){
+    var dd = String(D).split('').map(Number), dvs = String(dsr).split('').map(Number);
+    var n = dd.length, dl = dvs.length;
+    var t = dl;
+    if(Number(dd.slice(0,t).join('')) < dsr) t++;
+    if(t>n) return null;
+    var m = n-t+1, sd = [], w = Number(dd.slice(0,t).join('')), i, S;
+    for(i=0;i<m;i++){
+      S = dStep(w, dsr, i===0 ? t : sd[i-1].rstr.length+1);
+      sd.push(S);
+      if(i<m-1) w = S.r*10 + dd[t+i];
+    }
+    var rInt = sd[m-1].r;
+    if(withDec){
+      while(sd[sd.length-1].r>0 && sd.length-m<6){
+        var prev = sd[sd.length-1];
+        sd.push(dStep(prev.r*10, dsr, prev.rstr.length+1));
+      }
+      if(sd[sd.length-1].r>0) return null;
+    }
+    var M = sd.length;
+    return { D:D, d:dsr, dd:dd, dvs:dvs, n:n, dl:dl, t:t, m:m, M:M, K:M-m, sd:sd, rInt:rInt,
+             quoInt:sd.slice(0,m).map(function(x){ return x.q; }).join(''),
+             quoDec:sd.slice(m).map(function(x){ return x.q; }).join(''),
+             rem:sd[M-1].r };
+  }
+  function dQuo(md){ return md.quoInt + (md.K>0 ? DV.sep+md.quoDec : ''); }
+
+  function dAttempt(){
+    var n = DV.n, dl = DV.dl;
+    var lo = Math.pow(10,n-1), hi = Math.pow(10,n)-1;
+    var dsr = dl===1 ? rnd(2,9) : dl===2 ? rnd(11,99) : rnd(101,999), D;
+    if(DV.rem===2){
+      // el cociente decimal debe terminar: el divisor solo puede tener factores 2 y 5 tras simplificar
+      var d1 = dsr, d2 = 1;
+      while(d1%2===0){ d1 /= 2; d2 *= 2; }
+      while(d1%5===0){ d1 /= 5; d2 *= 5; }
+      if(d2===1) return null;
+      var rlo = Math.ceil(lo/d1), rhi = Math.floor(hi/d1);
+      if(rlo>rhi) return null;
+      var R = rnd(rlo,rhi);
+      if(R%d2===0) return null;
+      D = d1*R;
+      var md0 = dModel(D, dsr, true);
+      if(!md0 || md0.K<1 || md0.K>DV.dec || md0.rInt===0) return null;
+      return md0;
+    }
+    if(DV.rem===1){
+      if(2*dsr>hi) return null;
+      D = rnd(Math.max(lo,2*dsr), hi);
+      if(D%dsr===0) D++;
+      if(D>hi) return null;
+    } else {
+      var qmin = Math.max(2, Math.ceil(lo/dsr)), qmax = Math.floor(hi/dsr);
+      if(qmin>qmax) return null;
+      D = dsr*rnd(qmin,qmax);
+    }
+    return dModel(D, dsr, false);
+  }
+  function dGenerate(){
+    var md = null, tries = 0, k;
+    while(!md && tries<3000){ md = dAttempt(); tries++; }
+    if(!md){
+      md = DV.rem===2 ? dModel(3882,5,true) : dModel(642,2,false);
+    }
+    var steps = [], exp = {};
+    md.qcIndex = -1;
+    md.sd.forEach(function(S,i){
+      steps.push({t:'q', i:i, id:'q-'+i}); exp['q-'+i] = String(S.q);
+      for(k=0;k<S.pstr.length;k++){ steps.push({t:'p', i:i, k:k, id:'p-'+i+'-'+k}); exp['p-'+i+'-'+k] = S.pstr.charAt(k); }
+      for(k=0;k<S.rstr.length;k++){ steps.push({t:'r', i:i, k:k, id:'r-'+i+'-'+k}); exp['r-'+i+'-'+k] = S.rstr.charAt(k); }
+      if(i<md.M-1){
+        if(i===md.m-1 && md.K>0){ md.qcIndex = steps.length; steps.push({t:'qc', id:'qc'}); exp['qc'] = DV.sep; }
+        steps.push({t:'b', i:i, id:'b-'+i}); exp['b-'+i] = i<md.m-1 ? String(md.dd[md.t+i]) : '0';
+      }
+    });
+    md.steps = steps; md.exp = exp; md.cur = 0; md.errors = 0; md.done = false; md.hint = 0;
+    dx = md;
+  }
+
+  function dNames(){
+    var h = '<span><i class="dot pc3"></i><b>Dividendo</b>: '+dx.D+'</span>'+
+            '<span><i class="dot pc0"></i><b>Divisor</b>: '+dx.d+'</span>'+
+            '<span><i class="dot mint"></i><b>Cociente</b>: '+(dx.done ? dQuo(dx) : '❓')+'</span>'+
+            '<span><i class="dot pc1"></i><b>Residuo</b>: '+(dx.done ? dx.rem : '❓')+'</span>';
+    $('#dNames').innerHTML = h;
+  }
+
+  function dRender(){
+    var b = $('#dboard'), n = dx.n, t = dx.t, m = dx.m, M = dx.M, K = dx.K, nC = n+K, h = '', i, k, c;
+    var lc = function(c){ return c+2; };
+    var rowP = function(i){ return 2+2*i; }, rowR = function(i){ return 3+2*i; };
+    var rightCols = Math.max(dx.dl, m + (K>0 ? 1+K : 0));
+    b.style.setProperty('--cols', nC+1+rightCols);
+    b.style.gridTemplateColumns = 'var(--sign) repeat('+nC+', var(--cell)) calc(var(--cell)*.35) max-content';
+    b.setAttribute('role','group');
+    b.setAttribute('aria-label','División en columnas: '+dx.D+' entre '+dx.d);
+    function inp(id, cls, gcol, row, label){
+      return '<input class="vin '+cls+'" data-id="'+id+'" type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="'+label+'" style="grid-column:'+gcol+';grid-row:'+row+'">';
+    }
+    function inpFlex(id, cls, label, mode){
+      return '<input class="vin '+cls+'" data-id="'+id+'" type="text" inputmode="'+(mode||'numeric')+'" maxlength="1" autocomplete="off" aria-label="'+label+'">';
+    }
+    for(c=0;c<n;c++) h += '<div class="vd pc3" data-c="'+c+'" style="grid-column:'+lc(c)+';grid-row:1">'+dx.dd[c]+'</div>';
+    for(k=0;k<K;k++) h += '<div class="vd gh off'+(k===0?' gh1':'')+'" data-c="'+(n+k)+'" style="grid-column:'+lc(n+k)+';grid-row:1" aria-hidden="true">'+(k===0 ? DV.sep+'0' : '0')+'</div>';
+    h += '<div class="dhouse" style="grid-column:'+(nC+2)+'/'+(nC+4)+';grid-row:1"></div>';
+    h += '<div class="dvrow" style="grid-column:'+(nC+3)+';grid-row:1">';
+    for(k=0;k<dx.dl;k++) h += '<div class="vd pc0">'+dx.dvs[k]+'</div>';
+    h += '</div>';
+    // cociente
+    h += '<div class="dqrow" style="grid-column:'+(nC+3)+';grid-row:3">';
+    for(i=0;i<M;i++){
+      if(i===m && K>0) h += inpFlex('qc', 'res quo comma', 'Separador decimal del cociente', 'decimal');
+      h += inpFlex('q-'+i, 'res quo', (i<m ? 'Cifra '+(i+1)+' del cociente' : 'Decimal '+(i-m+1)+' del cociente'));
+    }
+    h += '</div>';
+    for(i=0;i<M;i++){
+      var S = dx.sd[i], e = t-1+i;
+      h += '<div class="vsign" style="grid-column:1;grid-row:'+rowP(i)+';font-size:calc(var(--cell)*.4)" aria-hidden="true">−</div>';
+      for(k=0;k<S.pstr.length;k++){
+        h += inp('p-'+i+'-'+k, 'prod', lc(e-S.pstr.length+1+k), rowP(i), 'Producto, cifra '+(k+1)+', paso '+(i+1));
+      }
+      var wl = Math.max(S.wlen, S.pstr.length);
+      h += '<div class="dsub" style="grid-column:'+lc(e-wl+1)+'/'+(lc(e)+1)+';grid-row:'+rowP(i)+'"></div>';
+      for(k=0;k<S.rstr.length;k++){
+        h += inp('r-'+i+'-'+k, 'res'+(i===M-1?' fin':''), lc(e-S.rstr.length+1+k), rowR(i), (i===M-1?'Residuo final':'Residuo')+', cifra '+(k+1)+', paso '+(i+1));
+      }
+      if(i<M-1) h += inp('b-'+i, 'res brg', lc(e+1), rowR(i), (i>=m-1 ? 'Cero que bajas' : 'Cifra que bajas')+', paso '+(i+1));
+    }
+    b.innerHTML = h;
+  }
+
+  function dCur(){ return DV.mode==='guided' && !dx.done ? dx.steps[dx.cur] : null; }
+  function dOrder(){
+    return DV.mode==='guided' ? dx.steps : dx.steps.filter(function(s){ return s.t!=='p'; });
+  }
+  function dApply(){
+    var cur = dCur(), guided = DV.mode==='guided';
+    $$('#dboard .vin').forEach(function(inp){
+      var isCur = !!cur && cur.id===inp.dataset.id;
+      var ok = inp.classList.contains('ok');
+      inp.classList.toggle('now', isCur);
+      if(guided){
+        inp.readOnly = !isCur;
+        inp.tabIndex = isCur ? 0 : -1;
+        inp.classList.toggle('dim', !isCur && !ok && !dx.done);
+      } else {
+        inp.readOnly = dx.done || ok;
+        inp.tabIndex = 0;
+        inp.classList.remove('dim');
+      }
+    });
+    var lo = -1, hi = -2;
+    if(cur){
+      if(cur.t==='q'){ lo = cur.i===0 ? 0 : dx.t-1+cur.i; hi = dx.t-1+cur.i; }
+      else if(cur.t==='b'){ lo = hi = dx.t+cur.i; }
+    }
+    var showGh = DV.mode==='solo' || dx.done || (dx.qcIndex>=0 && dx.cur>=dx.qcIndex);
+    $$('#dboard .vd[data-c]').forEach(function(el){
+      var c = Number(el.dataset.c);
+      el.classList.toggle('hl', c>=lo && c<=hi);
+      if(el.classList.contains('gh')) el.classList.toggle('off', !showGh);
+    });
+  }
+
+  function dPrompt(){
+    var el = $('#dPrompt');
+    if(DV.mode==='solo'){
+      el.innerHTML = 'Divide de izquierda a derecha: escribe la cifra del <b>cociente</b>, multiplica y resta para hallar el <b>residuo</b>, y baja la siguiente cifra del <b>dividendo</b>. Las cajitas punteadas son para el producto.'+
+        (dx.K>0 ? ' Si al final sobra algo, pon el <b>separador decimal</b> en el cociente y baja ceros hasta que el residuo sea 0.' : '');
+      return;
+    }
+    var s = dCur();
+    if(!s){ el.innerHTML = '¡Lo lograste! 🎉'; return; }
+    var dsr = dx.d, t = '', intro = '', S;
+    if(s.t==='qc'){
+      intro = '¡Sobraron <b>'+dx.rInt+'</b>! Pero la división puede seguir con <b>decimales</b>.';
+      t = '<span>Escribe el <b>separador decimal</b> ( '+DV.sep+' ) en el cociente, después del <b>'+dx.quoInt+'</b>. Es como si el dividendo fuera '+dx.D+DV.sep+'0 (los ceros grises).</span>';
+    } else {
+      S = dx.sd[s.i];
+      if(s.t==='q'){
+        intro = s.i===0 ?
+          'Toma las primeras cifras del <b>dividendo</b> hasta formar un número igual o mayor que el <b>divisor</b>: <b>'+S.w+'</b>.' :
+          'Ahora trabajas con <b>'+S.w+'</b>: el residuo anterior y la cifra que bajaste.';
+        t = '<span class="calc">'+S.w+' ÷ '+dsr+' = ?</span><span>¿Cuántas veces cabe el <b>divisor</b> ('+dsr+') en '+S.w+'? Escribe esa cifra en el <b>cociente</b>'+(s.i>=dx.m ? ', después del separador decimal.' : ', debajo del divisor.')+(s.i>0 ? ' Si no cabe, escribe 0.' : '')+'</span>';
+      } else if(s.t==='p'){
+        t = '<span class="calc">'+S.q+' × '+dsr+' = ?</span><span>Multiplica la cifra del cociente por el divisor. Escribe el <b>producto</b> en las cajitas punteadas, de izquierda a derecha.</span>';
+      } else if(s.t==='r'){
+        t = '<span class="calc">'+S.w+' − '+S.p+' = ?</span><span>Resta el producto al número con el que trabajas. Escribe el <b>residuo</b> debajo de la raya, de izquierda a derecha.'+(s.i===dx.M-1 ? ' Es el residuo final.' : '')+'</span>';
+      } else if(s.i>=dx.m-1){
+        t = '<b>Baja</b> un <b>0</b> ⬇️ junto al residuo ('+S.r+'): queda <b>'+S.r+'0</b>.';
+      } else {
+        t = '<b>Baja</b> la siguiente cifra del <b>dividendo</b> ⬇️ (está resaltada) y escríbela junto al residuo.';
+      }
+    }
+    el.innerHTML = (intro ? '<span style="flex-basis:100%">'+intro+'</span>' : '') + t;
+  }
+
+  function dHintText(s, level){
+    var dsr = dx.d, S;
+    if(s.t==='qc'){
+      return level<2 ? 'Cuando sobra algo y quieres seguir dividiendo, el cociente lleva un separador decimal (coma o punto).' :
+        'Escribe «'+DV.sep+'» después del '+dx.quoInt+'.';
+    }
+    S = dx.sd[s.i];
+    if(s.t==='q'){
+      if(level<2) return 'Piensa en la tabla del '+dsr+': ¿qué número multiplicado por '+dsr+' se acerca a '+S.w+' sin pasarse?';
+      return S.q===0 ? dsr+' es mayor que '+S.w+', no cabe ni una vez: escribe 0.' :
+        dsr+' × '+S.q+' = '+S.p+' cabe en '+S.w+', pero '+dsr+' × '+(S.q+1)+' = '+(dsr*(S.q+1))+' ya se pasa.';
+    }
+    if(s.t==='p'){
+      if(level<2) return 'Calcula '+S.q+' × '+dsr+'. Si el divisor tiene varias cifras, multiplica cifra por cifra.';
+      return S.q+' × '+dsr+' = '+S.p+'.';
+    }
+    if(s.t==='r'){
+      if(level<2) return 'Resta: '+S.w+' − '+S.p+'. Si restas bien, el resultado es menor que '+dsr+'.';
+      return S.w+' − '+S.p+' = '+S.r+'.';
+    }
+    if(s.i>=dx.m-1) return level<2 ? 'Al seguir con decimales se bajan ceros: es como agregar ceros al final del dividendo.' : 'Baja el 0.';
+    var dg = dx.dd[dx.t+s.i];
+    return level<2 ? 'Mira el dividendo: la cifra que baja es la siguiente, justo a la derecha de las que ya usaste.' : 'Baja el '+dg+'.';
+  }
+  function dShowHint(){
+    var s = dCur(); if(!s) return;
+    var h = $('#dHint');
+    h.innerHTML = '<b>💡 Pista:</b> '+dHintText(s, dx.hint);
+    h.hidden = false;
+  }
+  function dSoloHelp(){
+    var ord = dOrder(), i, s, el;
+    for(i=0;i<ord.length;i++){
+      s = ord[i];
+      el = $('#dboard .vin[data-id="'+s.id+'"]');
+      if(el && !el.classList.contains('ok')){
+        var h = $('#dHint');
+        h.innerHTML = '<b>💡 Pista:</b> '+dHintText(s, 2);
+        h.hidden = false;
+        return;
+      }
+    }
+  }
+  function dFocus(){
+    if(!dx || $('#tabDiv').hidden || dx.done) return;
+    var id = DV.mode==='guided' ? (dx.steps[dx.cur] && dx.steps[dx.cur].id) : 'q-0';
+    var el = id && $('#dboard .vin[data-id="'+id+'"]');
+    if(el){ el.focus(); el.select(); }
+  }
+  function dChips(){
+    var total = dlog.reduce(function(a,e){ return a+e.stars; }, 0);
+    $('#dChips').innerHTML = '<span class="chip">✅ '+dlog.length+' resuelta'+(dlog.length===1?'':'s')+'</span><span class="chip">⭐ '+total+'</span>';
+  }
+
+  function dSolved(){
+    if(dx.done) return;
+    dx.done = true;
+    var stars = dx.errors===0 ? 3 : (dx.errors<=2 ? 2 : 1);
+    var qs = dQuo(dx);
+    dlog.push({ a:dx.D, m:dx.d, answer:qs, rem:dx.rem, dec:dx.K, errors:dx.errors, stars:stars });
+    var html = '';
+    for(var i=0;i<3;i++) html += '<span class="'+(i<stars?'on':'off')+'">★</span>';
+    $('#dStars').innerHTML = html;
+    var base = dx.D+' ÷ '+dx.d+' = '+qs+'. ';
+    if(dx.K>0) base += 'Primero sobraron '+dx.rInt+'; al seguir con decimales el residuo final fue 0. ';
+    else base += dx.rem>0 ? 'Sobra '+dx.rem+' (residuo). ' : 'Residuo 0: división exacta. ';
+    $('#dDoneMsg').textContent = base + (stars===3 ? '¡Perfecto, sin errores!' : stars===2 ? '¡Muy bien!' : '¡Lo lograste, sigue practicando!');
+    $('#dDone').hidden = false;
+    $('#dHint').hidden = true;
+    $$('#dboard .vin').forEach(function(inp){
+      if(inp.classList.contains('prod') && inp.value==='') return;
+      inp.classList.remove('bad'); inp.classList.add('ok');
+    });
+    dApply(); dPrompt(); dChips(); dNames();
+    $('#dLive').textContent = '¡Correcto!';
+    if(stars===3) confetti();
+    $('#dNext').focus();
+  }
+
+  function dGuidedCheck(inp){
+    var cur = dCur();
+    if(!cur || inp.dataset.id!==cur.id || inp.value==='') return;
+    if(inp.value===dx.exp[cur.id]){
+      inp.classList.remove('bad'); inp.classList.add('ok');
+      dx.cur++; dx.hint = 0; $('#dHint').hidden = true; $('#dLive').textContent = '';
+      if(dx.cur>=dx.steps.length){ dSolved(); }
+      else { dApply(); dPrompt(); dFocus(); }
+    } else {
+      inp.classList.add('bad');
+      dx.errors++; dx.hint = Math.min(2, dx.hint+1);
+      dShowHint();
+      $('#dLive').textContent = 'Casi. Mira la pista e inténtalo otra vez.';
+      inp.select();
+    }
+  }
+  function dSoloAdvance(inp){
+    var ord = dOrder(), i;
+    for(i=0;i<ord.length;i++){
+      if(ord[i].id===inp.dataset.id){
+        var nx = ord[i+1];
+        if(nx){ var el = $('#dboard .vin[data-id="'+nx.id+'"]'); if(el){ el.focus(); el.select(); } }
+        return;
+      }
+    }
+  }
+  function dSoloCheck(){
+    if(dx.done || DV.mode!=='solo') return;
+    var missing = 0, wrong = 0;
+    $$('#dboard .vin').forEach(function(inp){
+      var id = inp.dataset.id, v = inp.value, required = id.charAt(0)!=='p';
+      if(inp.classList.contains('ok')) return;
+      if(v===''){ if(required) missing++; return; }
+      if(v===dx.exp[id]){ inp.classList.remove('bad'); inp.classList.add('ok'); }
+      else { inp.classList.add('bad'); wrong++; }
+    });
+    if(wrong===0 && missing===0){ dSolved(); return; }
+    if(wrong>0){
+      dx.errors++;
+      $('#dLive').textContent = 'Hay cajitas rojas. Revísalas e inténtalo otra vez.';
+      if(dx.errors>=2) dSoloHelp();
+    } else {
+      $('#dLive').textContent = 'Te faltan cajitas por llenar.';
+    }
+  }
+
+  function dNew(){
+    dGenerate();
+    $('#dDone').hidden = true; $('#dHint').hidden = true; $('#dLive').textContent = '';
+    $('#dNum').textContent = dlog.length+1;
+    dRender(); zApply('div'); dApply(); dPrompt(); dChips(); dNames(); dFocus();
+  }
+
+  $('#dboard').addEventListener('input', function(e){
+    var inp = e.target; if(!inp.classList.contains('vin')) return;
+    var v;
+    if(inp.dataset.id==='qc'){
+      v = inp.value.replace(/[^,.]/g,'').slice(-1);
+      if(v) v = DV.sep;
+    } else {
+      v = inp.value.replace(/\D/g,'').slice(-1);
+    }
+    inp.value = v; inp.classList.remove('bad');
+    if(v==='') return;
+    if(DV.mode==='guided') dGuidedCheck(inp); else dSoloAdvance(inp);
+  });
+  $('#dboard').addEventListener('keydown', function(e){
+    if(e.key==='Enter' && DV.mode==='solo'){ e.preventDefault(); dSoloCheck(); }
+  });
+  $('#dboard').addEventListener('focusin', function(e){
+    if(e.target.classList.contains('vin') && !e.target.readOnly) e.target.select();
+  });
+  $('#dCheck').addEventListener('click', dSoloCheck);
+  $('#dHelp').addEventListener('click', function(){
+    if(dx.done) return;
+    if(DV.mode==='guided'){ dx.hint = Math.min(2, dx.hint+1); dShowHint(); }
+    else dSoloHelp();
+  });
+  $('#dNew').addEventListener('click', dNew);
+  $('#dNext').addEventListener('click', dNew);
+
+  function syncD(){
+    $$('#tabDiv .group').forEach(function(g){
+      var key = g.dataset.dkey;
+      $$('.opt', g).forEach(function(b){ b.setAttribute('aria-pressed', String(DV[key])===b.dataset.val ? 'true':'false'); });
+    });
+    var off = DV.rem!==2;
+    ['dec','sep'].forEach(function(key){
+      var g = $('#tabDiv .group[data-dkey="'+key+'"]');
+      if(!g) return;
+      g.classList.toggle('off', off);
+      $$('.opt', g).forEach(function(b){ b.disabled = off; });
+    });
+    $('#dCheck').hidden = DV.mode!=='solo';
+  }
+  $$('#tabDiv .group .opt').forEach(function(b){
+    b.addEventListener('click', function(){
+      var key = b.closest('.group').dataset.dkey;
+      DV[key] = (key==='mode' || key==='sep') ? b.dataset.val : Number(b.dataset.val);
+      syncD(); dNew();
+    });
+  });
+
+  /* ---------- Terminar sesión de divisiones ---------- */
+  $('#dFinish').addEventListener('click', function(){
+    if(!dlog.length){ $('#dLive').textContent = 'Resuelve al menos una división y luego toca “Ya terminé”.'; return; }
+    var solved = dlog.length;
+    var perfect = dlog.filter(function(e){ return e.errors===0; }).length;
+    var pct = Math.round(perfect/solved*100);
+    $('#score').innerHTML = solved+' <small>'+(solved===1?'división':'divisiones')+' resuelta'+(solved===1?'':'s')+', '+perfect+' sin errores</small>';
+    var s = stars(pct), html = '';
+    for(var k=0;k<3;k++) html += '<span class="'+(k<s?'on':'off')+'">★</span>';
+    $('#stars').innerHTML = html;
+    $('#resMsg').textContent = pct===100 ? '¡Perfecto! Divides como un campeón.' :
+      pct>=70 ? '¡Muy bien! Casi todo sin errores.' :
+      pct>=40 ? '¡Buen trabajo! Repasa cuántas veces cabe el divisor y vuelve a practicar.' :
+      'Sigue practicando: cada división te ayuda a mejorar. Usa el modo paso a paso.';
+    var ul = $('#missed'); ul.innerHTML = '';
+    var withErr = dlog.filter(function(e){ return e.errors>0; });
+    withErr.forEach(function(e){
+      var li = document.createElement('li');
+      li.textContent = e.a+' ÷ '+e.m+' = '+e.answer+(e.rem>0 ? ' (residuo '+e.rem+')' : '')+' ('+e.errors+' error'+(e.errors===1?'':'es')+')';
+      ul.appendChild(li);
+    });
+    $('#missedBox').hidden = withErr.length===0;
+    var tipo = DV.rem===0 ? 'exacta' : DV.rem===1 ? 'con residuo' : 'con decimales (hasta '+DV.dec+')';
+    rep = {
+      source:'div',
+      practice:'División en columnas (dividendo de '+DV.n+' cifras, divisor de '+DV.dl+' cifra'+(DV.dl===1?'':'s')+', '+tipo+', '+(DV.mode==='guided'?'paso a paso':'yo solo')+')',
+      result: solved+' '+(solved===1?'división':'divisiones')+' resuelta'+(solved===1?'':'s')+', '+perfect+' sin errores ('+pct+'%)',
+      lines: dlog.map(function(e,i){
+        return (i+1)+'. '+e.a+' ÷ '+e.m+' = '+e.answer+(e.rem>0 ? ' (residuo '+e.rem+')' : '')+(e.errors===0 ? '  ✔ (sin errores)' : '  ✔ ('+e.errors+' error'+(e.errors===1?'':'es')+' en el camino)');
+      })
+    };
+    $('#approved').checked = false;
+    $('#approver').value = '';
+    $('#sendMsg').textContent = '';
+    var sec = $('#results'); sec.hidden = false;
+    updateSend();
+    sec.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto':'smooth', block:'start'});
+    if(pct>=90) confetti();
+  });
+
+  /* ---------- Tamaño del tablero (zoom) ---------- */
+  var ZOOM = { vert:{mode:'auto', z:1, sel:'#board'}, div:{mode:'auto', z:1, sel:'#dboard'} };
+  try{
+    ['vert','div'].forEach(function(k){
+      var v = parseFloat(localStorage.getItem('nl_zoom_'+k));
+      if(v>=0.4 && v<=2.2){ ZOOM[k].mode = 'manual'; ZOOM[k].z = v; }
+    });
+  }catch(e){}
+  function zApply(key){
+    var st = ZOOM[key], b = $(st.sel), wrap = b && b.parentElement;
+    if(!wrap || wrap.clientWidth===0) return;
+    if(st.mode==='auto'){
+      var z = 1, i, have = wrap.clientWidth-8;
+      for(i=0;i<4;i++){
+        b.style.setProperty('--z', z);
+        var need = b.offsetWidth;
+        if(need<=have || need===0) break;
+        z = Math.max(0.4, z*have/need*0.98);
+      }
+      st.z = z;
+    } else {
+      b.style.setProperty('--z', st.z);
+    }
+    var lab = $('.zoombar[data-zoom="'+key+'"] .zlabel');
+    if(lab) lab.textContent = (st.mode==='auto' ? 'Ajustado ' : '')+Math.round(st.z*100)+'%';
+  }
+  $$('.zoombar').forEach(function(bar){
+    var key = bar.dataset.zoom;
+    bar.addEventListener('click', function(e){
+      var btn = e.target.closest('.zb'); if(!btn) return;
+      var st = ZOOM[key], act = btn.dataset.act;
+      if(act==='fit'){
+        st.mode = 'auto';
+        try{ localStorage.removeItem('nl_zoom_'+key); }catch(err){}
+      } else {
+        st.mode = 'manual';
+        st.z = Math.round(Math.max(0.4, Math.min(2.2, st.z + (act==='in' ? 0.15 : -0.15)))*100)/100;
+        try{ localStorage.setItem('nl_zoom_'+key, String(st.z)); }catch(err){}
+      }
+      zApply(key);
+    });
+  });
+  var zTimer;
+  window.addEventListener('resize', function(){
+    clearTimeout(zTimer);
+    zTimer = setTimeout(function(){ zApply('vert'); zApply('div'); }, 120);
+  });
+
   /* ---------- Inicio ---------- */
   try{ var saved = localStorage.getItem('nl_name'); if(saved) $('#stuName').value = saved; }catch(e){}
   syncSettingsUI();
   generate();
   syncV();
   vNew();
+  syncD();
+  dNew();
 })();
 </script>
 </body>
