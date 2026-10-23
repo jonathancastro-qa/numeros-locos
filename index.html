@@ -567,7 +567,7 @@ body.kb-on .vin{scroll-margin-bottom:280px}
           </div>
         </div>
         <div class="group" data-vkey="carries">
-          <h3>¿Con llevadas? <span class="note">“Sin llevar” usa números pequeños para empezar.</span></h3>
+          <h3>¿Con llevadas? <span class="note">“Sin llevar” usa cifras pequeñas, porque con cifras grandes siempre hay llevadas.</span></h3>
           <div class="opts">
             <button class="opt" data-val="0" aria-pressed="false">Sin llevar</button>
             <button class="opt" data-val="1" aria-pressed="true">Con llevadas</button>
@@ -632,6 +632,7 @@ body.kb-on .vin{scroll-margin-bottom:280px}
         <div class="actions">
           <button class="btn sky" id="vCheck" hidden>🔍 Revisar</button>
           <button class="btn sun" id="vHelp">💡 Ayuda</button>
+          <button class="btn coral" id="vRedo" title="Borra tus respuestas y empieza este mismo ejercicio de nuevo">🔄 Rehacer</button>
           <button class="btn lilac" id="vNew">🎲 Otro ejercicio</button>
           <button class="btn mint" id="vFinish">🏁 ¡Ya terminé!</button>
         </div>
@@ -835,6 +836,7 @@ body.kb-on .vin{scroll-margin-bottom:280px}
         <div class="actions">
           <button class="btn sky" id="dCheck" hidden>🔍 Revisar</button>
           <button class="btn sun" id="dHelp">💡 Ayuda</button>
+          <button class="btn coral" id="dRedo" title="Borra tus respuestas y empieza esta misma división de nuevo">🔄 Rehacer</button>
           <button class="btn lilac" id="dNew">🎲 Otra división</button>
           <button class="btn mint" id="dFinish">🏁 ¡Ya terminé!</button>
         </div>
@@ -1427,17 +1429,18 @@ body.kb-on .vin{scroll-margin-bottom:280px}
     var n = V.n, q = V.q, i, tries = 0, a, b, md, good;
     do{
       tries++;
-      var top = V.carries ? V.maxM : Math.min(V.maxM,4);
+      // Sin llevar: se intenta primero con todo el rango elegido y solo se reduce si no hay forma de evitar llevadas
+      var top = V.carries===0 ? Math.max(2, V.maxM - Math.floor(tries/150)) : V.maxM;
       b = []; for(i=0;i<q;i++) b.push(rnd(2,top));
-      var lim = V.carries ? 9 : Math.floor(9/Math.max.apply(null,b));
+      var lim = V.carries===0 ? Math.floor(9/Math.max.apply(null,b)) : 9;
       a = []; for(i=0;i<n;i++) a.push(i===0 ? rnd(1,lim) : rnd(0,lim));
       md = vBuild(a,b);
       var mc = vHasCarry(md), ac = !!md.add && md.add.some(function(x){ return x.carryOut>0; });
-      good = V.carries ? mc : (!mc && !ac);
+      good = V.carries===1 ? mc : (!mc && !ac);
       var dT0 = Math.min(V.decMultiplicando, n-1) + Math.min(V.decMultiplicador, q-1);
       if(good && dT0>0) good = String(md.answer).length >= dT0+1 && md.answer%10!==0;
     } while(!good && tries<2000);
-    if(!good && !V.carries){
+    if(!good && V.carries===0){
       b = []; for(i=0;i<q;i++) b.push(2);
       a = []; for(i=0;i<n;i++) a.push(i===0 ? 1 : rnd(0,1));
       md = vBuild(a,b);
@@ -1598,6 +1601,7 @@ body.kb-on .vin{scroll-margin-bottom:280px}
       $('#gaprow').classList.toggle('on', !!cur && cur.id==='dp');
       vDecRefresh();
     }
+    var rbv = $('#vRedo'); if(rbv) rbv.hidden = !!vx.done;
     kbSync();
   }
 
@@ -1843,6 +1847,14 @@ body.kb-on .vin{scroll-margin-bottom:280px}
     if(V.mode==='guided'){ vx.hint = Math.min(2, vx.hint+1); vShowHint(); }
     else vSoloHelp();
   });
+  function vRedo(){
+    if(!vx || vx.done) return;
+    vx.cur = 0; vx.hint = 0; vx.dpSel = null;
+    $('#vHint').hidden = true;
+    $('#vLive').textContent = '¡Empecemos de nuevo este ejercicio!';
+    vRender(); zApply('vert'); vApplyState(); vPrompt(); vNames(); vFocusCur();
+  }
+  $('#vRedo').addEventListener('click', vRedo);
   $('#vNew').addEventListener('click', vNew);
   $('#vNext').addEventListener('click', vNew);
 
@@ -1887,7 +1899,7 @@ body.kb-on .vin{scroll-margin-bottom:280px}
     $('#missedBox').hidden = withErr.length===0;
     rep = {
       source:'vert',
-      practice:'Multiplicación en columnas (multiplicando de '+V.n+' cifras, multiplicador de '+V.q+' cifra'+(V.q===1?'':'s')+' con cifras del 2 al '+V.maxM+', '+((V.decMultiplicando>0||V.decMultiplicador>0)?'con decimales, ':'')+(V.carries?'con llevadas':'sin llevadas')+', '+(V.mode==='guided'?'paso a paso':'yo solo')+')',
+      practice:'Multiplicación en columnas (multiplicando de '+V.n+' cifras, multiplicador de '+V.q+' cifra'+(V.q===1?'':'s')+' con cifras del 2 al '+V.maxM+', '+((V.decMultiplicando>0||V.decMultiplicador>0)?'con decimales, ':'')+(V.carries===0 ? 'sin llevadas' : 'con llevadas')+', '+(V.mode==='guided'?'paso a paso':'yo solo')+')',
       result: solved+' ejercicio'+(solved===1?'':'s')+' resuelto'+(solved===1?'':'s')+', '+perfect+' sin errores ('+pct+'%)',
       lines: vlog.map(function(e,i){
         return (i+1)+'. '+e.a+' × '+e.m+' = '+e.answer+(e.errors===0 ? '  ✔ (sin errores)' : '  ✔ ('+e.errors+' error'+(e.errors===1?'':'es')+' en el camino)');
@@ -2158,6 +2170,7 @@ body.kb-on .vin{scroll-margin-bottom:280px}
     $$('#dboard .vd[data-mark]').forEach(function(el){
       el.classList.toggle('cm', shifted ? el.dataset.cm1==='1' : el.dataset.cm0==='1');
     });
+    var rbd = $('#dRedo'); if(rbd) rbd.hidden = !!dx.done;
     kbSync();
   }
 
@@ -2408,6 +2421,14 @@ body.kb-on .vin{scroll-margin-bottom:280px}
     if(DV.mode==='guided'){ dx.hint = Math.min(2, dx.hint+1); dShowHint(); }
     else dSoloHelp();
   });
+  function dRedo(){
+    if(!dx || dx.done) return;
+    dx.cur = 0; dx.hint = 0;
+    $('#dHint').hidden = true;
+    $('#dLive').textContent = '¡Empecemos de nuevo esta división!';
+    dRender(); zApply('div'); dApply(); dPrompt(); dNames(); dFocus();
+  }
+  $('#dRedo').addEventListener('click', dRedo);
   $('#dNew').addEventListener('click', dNew);
   $('#dNext').addEventListener('click', dNew);
 
